@@ -1,22 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
-import { TOPICS } from '../data/topics.js';
 import { tutor } from '../lib/api.js';
 import MathText from './MathText.jsx';
 
-const STARTERS = [
-  'I get stuck rationalising surd denominators — can you walk me through one?',
-  'How do I find the nth term of a quadratic sequence?',
-  'When do I use the quadratic formula vs completing the square?',
-  'Explain how to share an amount in a ratio like 3:5.',
-];
-
-export default function Tutor() {
+export default function Tutor({ subject }) {
   const [topicName, setTopicName] = useState('');
-  const [messages, setMessages] = useState([]); // {role, content}
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const endRef = useRef(null);
+
+  const starters = [
+    `Explain a tricky idea in ${subject.name} simply`,
+    `Give me a hint for a hard ${subject.name} question`,
+    `Quiz me on ${subject.topics[0]?.name || subject.name}`,
+    `How should I revise ${subject.name} for the exam?`,
+  ];
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -31,11 +30,11 @@ export default function Tutor() {
     setInput('');
     setBusy(true);
     try {
-      const { reply } = await tutor({ topicName: topicName || undefined, messages: next });
+      const { reply } = await tutor({ subject: subject.name, topicName: topicName || undefined, messages: next });
       setMessages([...next, { role: 'assistant', content: reply }]);
     } catch (e) {
       setError(e.message);
-      setMessages(messages); // roll back the optimistic user turn on failure
+      setMessages(messages);
     } finally {
       setBusy(false);
     }
@@ -46,10 +45,8 @@ export default function Tutor() {
       <div className="card rise p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="font-display text-lg">Maths tutor</h2>
-            <p className="text-sm text-slate2">
-              Ask anything. I&apos;ll give hints and nudge you to the answer — not just hand it over.
-            </p>
+            <h2 className="font-display text-lg">{subject.name} tutor</h2>
+            <p className="text-sm text-slate2">Ask anything. I&apos;ll give hints and nudge you to the answer — not just hand it over.</p>
           </div>
           <label className="text-sm">
             <span className="mr-2 text-slate2">Focus topic</span>
@@ -59,9 +56,7 @@ export default function Tutor() {
               className="rounded-xl border border-line bg-white px-3 py-2 font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
             >
               <option value="">Any</option>
-              {TOPICS.map((t) => (
-                <option key={t.id} value={t.name}>{t.name}</option>
-              ))}
+              {subject.topics.map((t) => (<option key={t.id} value={t.name}>{t.name}</option>))}
             </select>
           </label>
         </div>
@@ -73,12 +68,8 @@ export default function Tutor() {
             <div className="space-y-3">
               <p className="text-sm text-slate2">Try one of these to get going:</p>
               <div className="grid gap-2 sm:grid-cols-2">
-                {STARTERS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => send(s)}
-                    className="rounded-xl border border-line bg-white/70 p-3 text-left text-sm hover:bg-white"
-                  >
+                {starters.map((s) => (
+                  <button key={s} onClick={() => send(s)} className="rounded-xl border border-line bg-white/70 p-3 text-left text-sm hover:bg-white">
                     {s}
                   </button>
                 ))}
@@ -88,13 +79,9 @@ export default function Tutor() {
 
           {messages.map((m, i) => (
             <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div
-                className={`max-w-[85%] rounded-2xl px-4 py-2.5 leading-relaxed ${
-                  m.role === 'user'
-                    ? 'bg-ink text-paper rounded-br-sm'
-                    : 'bg-white border border-line rounded-bl-sm'
-                }`}
-              >
+              <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 leading-relaxed whitespace-pre-line ${
+                m.role === 'user' ? 'bg-ink text-paper rounded-br-sm' : 'bg-white border border-line rounded-bl-sm'
+              }`}>
                 <MathText>{m.content}</MathText>
               </div>
             </div>
@@ -121,19 +108,12 @@ export default function Tutor() {
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  send();
-                }
-              }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
               rows={1}
-              placeholder="Ask a maths question…  (Enter to send, Shift+Enter for a new line)"
+              placeholder="Ask a question…  (Enter to send, Shift+Enter for a new line)"
               className="max-h-32 flex-1 resize-none rounded-xl border border-line bg-white px-3 py-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
             />
-            <button className="btn-accent" onClick={() => send()} disabled={busy || !input.trim()}>
-              Send
-            </button>
+            <button className="btn-accent" onClick={() => send()} disabled={busy || !input.trim()}>Send</button>
           </div>
         </div>
       </div>

@@ -1,8 +1,7 @@
-// Progress tracking — stored locally in the browser (no account / server needed for v1).
-// Each topic accumulates attempts, correct answers, a rolling confidence score and
-// the last-practised timestamp. The dashboard derives weak areas from this.
+// Progress tracking — stored locally in the browser, namespaced by subject.
+// Shape: { [subjectId]: { [topicId]: {attempts, correct, mastery, lastPractised} } }
 
-const KEY = 'gcse-math-revise:progress:v1';
+const KEY = 'gcse-revise:progress:v2';
 
 function read() {
   try {
@@ -17,21 +16,19 @@ function write(data) {
   try {
     localStorage.setItem(KEY, JSON.stringify(data));
   } catch {
-    /* storage may be unavailable (private mode); fail silently */
+    /* storage unavailable (private mode) — fail silently */
   }
 }
 
-export function getProgress(topicId) {
+const blank = () => ({ attempts: 0, correct: 0, mastery: null, lastPractised: null });
+
+export function getProgress(subjectId, topicId) {
   const data = read();
-  return (
-    data[topicId] || {
-      attempts: 0,
-      correct: 0,
-      // mastery is an EWMA of correctness in [0,1]; null = never attempted
-      mastery: null,
-      lastPractised: null,
-    }
-  );
+  return data[subjectId]?.[topicId] || blank();
+}
+
+export function getSubjectProgress(subjectId) {
+  return read()[subjectId] || {};
 }
 
 export function getAllProgress() {
@@ -39,26 +36,56 @@ export function getAllProgress() {
 }
 
 // score: 1 = fully correct, 0.5 = partially correct, 0 = incorrect.
-export function recordAttempt(topicId, score) {
+export function recordAttempt(subjectId, topicId, score) {
   const data = read();
-  const prev = data[topicId] || { attempts: 0, correct: 0, mastery: null, lastPractised: null };
-  const alpha = 0.4; // weighting for the most recent attempt
+  if (!data[subjectId]) data[subjectId] = {};
+  const prev = data[subjectId][topicId] || blank();
+  const alpha = 0.4; // weight of the most recent attempt
   const mastery = prev.mastery == null ? score : prev.mastery * (1 - alpha) + score * alpha;
-  data[topicId] = {
+  data[subjectId][topicId] = {
     attempts: prev.attempts + 1,
     correct: prev.correct + (score >= 1 ? 1 : 0),
     mastery: Math.round(mastery * 100) / 100,
     lastPractised: new Date().toISOString(),
   };
   write(data);
-  return data[topicId];
+  return data[subjectId][topicId];
 }
 
-export function resetProgress() {
-  write({});
+export function resetSubject(subjectId) {
+  const data = read();
+  delete data[subjectId];
+  write(data);
 }
 
-// Convert a mastery value into a friendly band.
+// --- simple checklist storage for portfolio subjects ---
+const CL_KEY = 'gcse-revise:checklist:v1';
+
+export function getChecklist(subjectId) {
+  try {
+    return JSON.parse(localStorage.getItem(CL_KEY) || '{}')[subjectId] || {};
+  } catch {
+    return {};
+  }
+}
+
+export function toggleChecklist(subjectId, index, value) {
+  let all = {};
+  try {
+    all = JSON.parse(localStorage.getItem(CL_KEY) || '{}');
+  } catch {
+    all = {};
+  }
+  if (!all[subjectId]) all[subjectId] = {};
+  all[subjectId][index] = value;
+  try {
+    localStorage.setItem(CL_KEY, JSON.stringify(all));
+  } catch {
+    /* ignore */
+  }
+  return all[subjectId];
+}
+
 export function masteryBand(mastery) {
   if (mastery == null) return { label: 'Not started', tone: 'idle' };
   if (mastery >= 0.8) return { label: 'Secure', tone: 'good' };
