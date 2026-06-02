@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { TOPICS, TOPICS_BY_ID, STRANDS, PAPER_INFO } from '../data/topics.js';
 import { getAllProgress, masteryBand, resetProgress } from '../lib/storage.js';
+import WelcomeFromDad from './WelcomeFromDad.jsx';
 
 const TONE = {
   good: 'text-accent',
@@ -50,6 +51,7 @@ export default function Dashboard({ onPractice }) {
 
   return (
     <div className="space-y-6">
+      <WelcomeFromDad />
       <section className="card rise overflow-hidden">
         <div className="bg-ink px-5 py-4 text-paper">
           <p className="font-display text-xl">{PAPER_INFO.ppe.name}</p>
