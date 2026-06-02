@@ -1,0 +1,17 @@
+# Netlify configuration for GCSE-Math-Revise
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[dev]
+  command = "npm run dev"
+  targetPort = 5173
+  port = 8888
+  framework = "#custom"
+
+# SPA fallback so client-side views resolve on refresh
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

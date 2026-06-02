@@ -1,0 +1,27 @@
+{
+  "name": "gcse-math-revise",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "An AI revision agent for GCSE Mathematics (Higher) — adaptive practice, step-by-step marking, a hint-first tutor, and a weak-area dashboard. Powered by Anthropic Claude.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "netlify:dev": "netlify dev",
+    "lint": "echo \"(no linter configured yet)\""
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.1",
+    "katex": "^0.16.11",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "vite": "^5.4.11"
+  }
+}
