@@ -3,71 +3,61 @@
 @tailwind utilities;
 
 :root {
-  --paper: #faf6ec;
+  --c-paper: 250 246 236;
+  --c-ink: 22 32 43;
+  --c-slate2: 70 85 99;
+  --c-line: 217 208 190;
+  --c-surface: 255 255 255;
+  --c-accent: 31 138 76;
+  --c-accentSoft: 226 240 229;
+  --c-coral: 232 98 58;
+  --c-gold: 224 165 38;
   --grid: rgba(22, 32, 43, 0.05);
   --grid-strong: rgba(22, 32, 43, 0.08);
 }
 
-html {
-  scroll-behavior: smooth;
+.dark {
+  --c-paper: 16 21 27;
+  --c-ink: 233 228 216;
+  --c-slate2: 150 162 173;
+  --c-line: 42 51 62;
+  --c-surface: 26 33 42;
+  --c-accent: 60 178 104;
+  --c-accentSoft: 24 46 34;
+  --c-coral: 240 124 86;
+  --c-gold: 226 176 74;
+  --grid: rgba(233, 228, 216, 0.04);
+  --grid-strong: rgba(233, 228, 216, 0.06);
 }
+
+html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
-  background-color: var(--paper);
-  /* faint graph-paper grid — a nod to maths exercise books */
+  background-color: rgb(var(--c-paper));
   background-image:
     linear-gradient(var(--grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid) 1px, transparent 1px),
     linear-gradient(var(--grid-strong) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px);
-  background-size:
-    24px 24px,
-    24px 24px,
-    120px 120px,
-    120px 120px;
-  color: #16202b;
+  background-size: 24px 24px, 24px 24px, 120px 120px, 120px 120px;
+  color: rgb(var(--c-ink));
   font-family: 'Hanken Grotesk', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* KaTeX should inherit our colour and not overflow on mobile */
-.katex {
-  font-size: 1.02em;
-  color: inherit;
-}
+.katex { font-size: 1.02em; color: inherit; }
 
 @layer components {
-  .card {
-    @apply bg-white/85 backdrop-blur-[1px] border border-line rounded-2xl shadow-card;
-  }
-  .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-semibold transition
-           focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30 disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-  .btn-primary {
-    @apply btn bg-ink text-paper hover:bg-ink/90 active:translate-y-px;
-  }
-  .btn-accent {
-    @apply btn bg-accent text-white hover:brightness-105 active:translate-y-px;
-  }
-  .btn-ghost {
-    @apply btn border border-line bg-white/60 text-ink hover:bg-white;
-  }
-  .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-white/70 px-2.5 py-1 font-mono text-xs;
-  }
+  .card { @apply bg-surface/85 backdrop-blur-[1px] border border-line rounded-2xl shadow-card; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30 disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-primary { @apply btn bg-ink text-paper hover:opacity-90 active:translate-y-px; }
+  .btn-accent { @apply btn bg-accent text-white hover:brightness-110 active:translate-y-px; }
+  .btn-ghost { @apply btn border border-line bg-surface/60 text-ink hover:bg-surface; }
+  .chip { @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-surface/70 px-2.5 py-1 font-mono text-xs; }
 }
 
-/* staggered entrance for grids */
-@keyframes rise {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.rise {
-  animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-
-.tabular {
-  font-variant-numeric: tabular-nums;
-}
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.rise { animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.tabular { font-variant-numeric: tabular-nums; }

@@ -6,6 +6,7 @@ import Practice from './components/Practice.jsx';
 import Tutor from './components/Tutor.jsx';
 import TopicBrowser from './components/TopicBrowser.jsx';
 import Checklist from './components/Checklist.jsx';
+import ThemeToggle from './components/ThemeToggle.jsx';
 
 const EXAM_VIEWS = [
   { id: 'dashboard', label: 'Dashboard' },
@@ -53,7 +54,9 @@ export default function App() {
               <span className="block text-xs text-slate2">{subject.tier ? subject.tier + ' · ' : ''}← all subjects</span>
             </span>
           </button>
-          <nav className="flex items-center gap-1 rounded-xl border border-line bg-white/60 p-1">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <nav className="flex items-center gap-1 rounded-xl border border-line bg-surface/60 p-1">
             {views.map((v) => (
               <button
                 key={v.id}
@@ -65,7 +68,8 @@ export default function App() {
                 {v.label}
               </button>
             ))}
-          </nav>
+            </nav>
+          </div>
         </div>
       </header>
 

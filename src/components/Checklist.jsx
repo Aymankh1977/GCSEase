@@ -28,7 +28,7 @@ export default function Checklist({ subject }) {
         <ul className="space-y-2">
           {items.map((item, i) => (
             <li key={i}>
-              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-white/70 p-3 hover:bg-white">
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-surface/70 p-3 hover:bg-surface">
                 <input
                   type="checkbox"
                   checked={!!done[i]}

@@ -51,15 +51,15 @@ export default function Dashboard({ subject, onPractice }) {
           <p className="text-sm opacity-80">{subject.board} · {subject.paper}</p>
         </div>
         <div className="grid grid-cols-2 gap-px bg-line sm:grid-cols-3">
-          <div className="bg-white/85 p-4">
+          <div className="bg-surface/85 p-4">
             <p className="text-xs uppercase tracking-wide text-slate2">Exam</p>
             <p className="font-semibold">{subject.examLabel}</p>
           </div>
-          <div className="bg-white/85 p-4">
+          <div className="bg-surface/85 p-4">
             <p className="text-xs uppercase tracking-wide text-slate2">Days to go</p>
             <p className="font-display text-2xl tabular text-coral">{days != null && days >= 0 ? days : '—'}</p>
           </div>
-          <div className="bg-white/85 p-4">
+          <div className="bg-surface/85 p-4">
             <p className="text-xs uppercase tracking-wide text-slate2">Lead teacher</p>
             <p className="font-semibold">{subject.leadTeacher || '—'}</p>
           </div>

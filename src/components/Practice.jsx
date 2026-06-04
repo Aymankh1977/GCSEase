@@ -86,7 +86,7 @@ export default function Practice({ subject, initialTopicId, onTopicConsumed }) {
             <select
               value={topicId}
               onChange={(e) => setTopicId(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-line bg-white px-3 py-2.5 font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
+              className="mt-1 w-full rounded-xl border border-line bg-surface px-3 py-2.5 font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
             >
               {Object.entries(grouped).map(([key, topics]) =>
                 topics.length ? (
@@ -100,7 +100,7 @@ export default function Practice({ subject, initialTopicId, onTopicConsumed }) {
 
           <div className="block">
             <span className="text-xs uppercase tracking-wide text-slate2">Difficulty</span>
-            <div className="mt-1 flex gap-1 rounded-xl border border-line bg-white p-1">
+            <div className="mt-1 flex gap-1 rounded-xl border border-line bg-surface p-1">
               {DIFFS.map((d) => (
                 <button
                   key={d.v}
@@ -144,7 +144,7 @@ export default function Practice({ subject, initialTopicId, onTopicConsumed }) {
               disabled={phase === 'marked' || phase === 'marking'}
               rows={5}
               placeholder="Write your answer here — show your working or your full response."
-              className="mt-1 w-full rounded-xl border border-line bg-white px-3 py-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30 disabled:bg-line/20"
+              className="mt-1 w-full rounded-xl border border-line bg-surface px-3 py-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30 disabled:bg-line/20"
             />
             {phase !== 'marked' && (
               <button className="btn-primary mt-2" onClick={submit} disabled={phase === 'marking' || !answer.trim()}>

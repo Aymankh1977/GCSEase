@@ -101,7 +101,7 @@ export default function Tutor({ subject }) {
             <select
               value={topicName}
               onChange={(e) => setTopicName(e.target.value)}
-              className="rounded-xl border border-line bg-white px-3 py-2 font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
+              className="rounded-xl border border-line bg-surface px-3 py-2 font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
             >
               <option value="">Any</option>
               {subject.topics.map((t) => (<option key={t.id} value={t.name}>{t.name}</option>))}
@@ -117,7 +117,7 @@ export default function Tutor({ subject }) {
               <p className="text-sm text-slate2">Try one of these, or tap the paperclip to upload a handout:</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {starters.map((s) => (
-                  <button key={s} onClick={() => send(s)} className="rounded-xl border border-line bg-white/70 p-3 text-left text-sm hover:bg-white">
+                  <button key={s} onClick={() => send(s)} className="rounded-xl border border-line bg-surface/70 p-3 text-left text-sm hover:bg-surface">
                     {s}
                   </button>
                 ))}
@@ -128,13 +128,13 @@ export default function Tutor({ subject }) {
           {messages.map((m, i) => (
             <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 leading-relaxed whitespace-pre-line ${
-                m.role === 'user' ? 'bg-ink text-paper rounded-br-sm' : 'bg-white border border-line rounded-bl-sm'
+                m.role === 'user' ? 'bg-ink text-paper rounded-br-sm' : 'bg-surface border border-line rounded-bl-sm'
               }`}>
                 {m._preview?.kind === 'image' && (
                   <img src={m._preview.url} alt="uploaded handout" className="mb-2 max-h-48 rounded-lg border border-white/20" />
                 )}
                 {m._preview?.kind === 'pdf' && (
-                  <div className="mb-2 inline-flex items-center gap-2 rounded-lg bg-white/15 px-2 py-1 text-sm">
+                  <div className="mb-2 inline-flex items-center gap-2 rounded-lg bg-surface/15 px-2 py-1 text-sm">
                     📄 {m._preview.name}
                   </div>
                 )}
@@ -145,7 +145,7 @@ export default function Tutor({ subject }) {
 
           {busy && (
             <div className="flex justify-start">
-              <div className="rounded-2xl rounded-bl-sm border border-line bg-white px-4 py-2.5 text-slate2">
+              <div className="rounded-2xl rounded-bl-sm border border-line bg-surface px-4 py-2.5 text-slate2">
                 <span className="inline-flex gap-1">
                   <span className="animate-bounce">·</span>
                   <span className="animate-bounce [animation-delay:0.15s]">·</span>
@@ -161,7 +161,7 @@ export default function Tutor({ subject }) {
 
         {(attachment || attaching) && (
           <div className="border-t border-line px-3 pt-2">
-            <div className="inline-flex items-center gap-2 rounded-lg border border-line bg-white/70 px-2 py-1 text-sm">
+            <div className="inline-flex items-center gap-2 rounded-lg border border-line bg-surface/70 px-2 py-1 text-sm">
               {attaching ? (
                 <span className="text-slate2">Preparing file…</span>
               ) : attachment.preview.kind === 'image' ? (
@@ -197,7 +197,7 @@ export default function Tutor({ subject }) {
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
               rows={1}
               placeholder={attachment ? 'Ask about your handout… (or just press Send)' : 'Ask a question…  (Enter to send)'}
-              className="max-h-32 flex-1 resize-none rounded-xl border border-line bg-white px-3 py-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
+              className="max-h-32 flex-1 resize-none rounded-xl border border-line bg-surface px-3 py-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
             />
             <button className="btn-accent" onClick={() => send()} disabled={busy || attaching || (!input.trim() && !attachment)}>Send</button>
           </div>

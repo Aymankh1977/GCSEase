@@ -1,5 +1,6 @@
 import { SUBJECTS_LIST, PPE } from '../data/subjects.js';
 import WelcomeFromDad from './WelcomeFromDad.jsx';
+import ThemeToggle from './ThemeToggle.jsx';
 
 function daysUntil(dateStr) {
   if (!dateStr) return null;
@@ -11,12 +12,15 @@ export default function SubjectHome({ onPick }) {
   return (
     <div className="min-h-screen">
       <header className="border-b border-line bg-paper/85 backdrop-blur">
-        <div className="mx-auto max-w-5xl px-4 py-3 flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-ink text-paper font-display text-xl">★</span>
-          <div className="leading-tight">
-            <h1 className="font-display text-lg font-semibold">Juri&apos;s Revision Hub</h1>
-            <p className="text-xs text-slate2">{PPE.name} · {PPE.window}</p>
+        <div className="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-ink text-paper font-display text-xl">★</span>
+            <div className="leading-tight">
+              <h1 className="font-display text-lg font-semibold">Juri&apos;s Revision Hub</h1>
+              <p className="text-xs text-slate2">{PPE.name} · {PPE.window}</p>
+            </div>
           </div>
+          <ThemeToggle />
         </div>
       </header>
 
