@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { tutor } from '../lib/api.js';
 import { fileToAttachment } from '../lib/files.js';
 import MathText from './MathText.jsx';
+import SpeakButton from './SpeakButton.jsx';
 
 // Pull the plain text out of a message whose content may be a string or blocks.
 function textOfContent(content) {
@@ -139,6 +140,9 @@ export default function Tutor({ subject }) {
                   </div>
                 )}
                 <MathText>{m._text ?? textOfContent(m.content)}</MathText>
+                {m.role === 'assistant' && (
+                  <div className="mt-2"><SpeakButton text={m._text ?? textOfContent(m.content)} /></div>
+                )}
               </div>
             </div>
           ))}

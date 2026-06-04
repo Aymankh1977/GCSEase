@@ -3,6 +3,7 @@ import { topicsByGroup } from '../data/subjects.js';
 import { generateQuestion, markAnswer } from '../lib/api.js';
 import { recordAttempt, getProgress } from '../lib/storage.js';
 import MathText from './MathText.jsx';
+import SpeakButton from './SpeakButton.jsx';
 
 const DIFFS = [
   { v: 1, label: 'Build-up' },
@@ -160,6 +161,9 @@ export default function Practice({ subject, initialTopicId, onTopicConsumed }) {
           <div className="flex items-center gap-3">
             <ScorePill score={result.score} />
             <p className="font-display text-lg">{result.verdict}</p>
+            <div className="ml-auto">
+              <SpeakButton text={[result.feedback, result.workedSolution].filter(Boolean).join('. Model answer. ')} />
+            </div>
           </div>
           {result.feedback && (
             <div className="mt-3 rounded-xl bg-accentSoft/60 p-3 leading-relaxed whitespace-pre-line"><MathText>{result.feedback}</MathText></div>
