@@ -9,16 +9,49 @@ const DIFFICULTY = {
 function styleGuidance(markingStyle) {
   switch (markingStyle) {
     case 'maths':
-      return `Write ONE exam-style maths question. Use LaTeX for ALL mathematics (single $...$ inline, double $$...$$ display). Give a sensible mark tariff (1–6). Describe any diagram in words. Do not include the answer.`;
+      return `Write an exam-style maths question (it may have parts). Use LaTeX for ALL mathematics (single $...$ inline, double $$...$$ display). Give a sensible mark tariff per part (1–6 each).`;
     case 'science':
-      return `Write ONE exam-style question. Use proper units and command words (state, describe, explain, calculate, evaluate). Calculations may appear; use LaTeX for any formulae/equations ($...$). For higher difficulty, a 6-mark extended-response question is ideal. Mark tariff 1–6. Describe any diagram in words. Do not include the answer.`;
+      return `Write an exam-style question (it may have parts). Use proper units and command words (state, describe, explain, calculate, evaluate). Use LaTeX for any formulae/equations ($...$). A 6-mark extended-response part is good for higher difficulty.`;
     case 'english-language':
-      return `If the topic is a READING skill: first WRITE YOUR OWN ORIGINAL short fiction extract (roughly 120–180 words — your own writing, never copied from any real text), then ask the matching exam question for that assessment objective. If the topic is WRITING: give a single imaginative writing task (a title or short scenario). Put any extract inside the "question" field, clearly separated from the task. Mark tariff appropriate to the question (writing tasks ~40). Do not include a model answer.`;
+      return `If the topic is a READING skill: first WRITE YOUR OWN ORIGINAL short fiction extract (roughly 120–180 words — your own writing, never copied), put it in "context", then ask the matching exam question as the part(s). If the topic is WRITING: give a single imaginative writing task. Mark tariff appropriate (writing tasks ~40).`;
     case 'english-literature':
-      return `Write ONE exam-style question. For MACBETH you may quote a short extract (Shakespeare is out of copyright). For REFUGEE BOY you must NOT reproduce any text from the novel — set a theme or character essay question instead. Mark tariff appropriate (~20–40). Do not include a model answer.`;
+      return `Write an exam-style question. For MACBETH you may quote a short extract (out of copyright) in "context". For REFUGEE BOY do NOT reproduce any text — set a theme or character essay question instead. Mark tariff ~20–40.`;
     default: // 'essay' — humanities & vocational
-      return `Write ONE exam-style question using an appropriate GCSE command word (e.g. "Describe", "Explain", "Outline", "Analyse", "Evaluate", "To what extent"). Choose a realistic mark tariff (commonly 2, 4, 8, 9, 12 or 16). Do not include a model answer.`;
+      return `Write an exam-style question using appropriate GCSE command words ("Describe", "Explain", "Outline", "Analyse", "Evaluate", "To what extent"). Realistic tariff per part (commonly 2, 4, 8, 9, 12 or 16).`;
   }
+}
+
+// Detects references to a VISUAL (diagram/figure/graph/image/chart/map) that the
+// app cannot display — while allowing the student to be ASKED to draw one, and
+// allowing data that is written out in the text ("results shown below: ...").
+function refersToMissingVisual(text) {
+  const t = String(text || '');
+  const VISUAL = '(diagram|figure|image|photograph|photo|picture|illustration|graph|chart|map)';
+  const patterns = [
+    new RegExp(`\\b(the|this|following)\\s+${VISUAL}\\b`, 'i'),
+    new RegExp(`\\b${VISUAL}\\s+(above|below|shown|opposite|provided)\\b`, 'i'),
+    new RegExp(`\\b(refer to|use|using|see|from|in)\\s+the\\s+${VISUAL}\\b`, 'i'),
+  ];
+  const produce = /\b(draw|plot|sketch|construct|complete|label|create|produce|make|add to)\b/i;
+  for (const re of patterns) {
+    const m = t.match(re);
+    if (m) {
+      const before = t.slice(Math.max(0, m.index - 32), m.index);
+      if (!produce.test(before)) return true; // a reference to something not provided
+    }
+  }
+  return false;
+}
+
+function buildParts(data) {
+  let parts = Array.isArray(data.parts) ? data.parts : [];
+  parts = parts
+    .filter((p) => p && (p.prompt || p.text))
+    .map((p) => ({ label: String(p.label ?? '').trim(), prompt: String(p.prompt ?? p.text).trim(), marks: Number(p.marks) || 1 }));
+  if (!parts.length && data.question) {
+    parts = [{ label: '', prompt: String(data.question), marks: Number(data.marks) || 3 }];
+  }
+  return parts;
 }
 
 export const handler = wrap(async (event) => {
@@ -34,7 +67,11 @@ export const handler = wrap(async (event) => {
 
 ${styleGuidance(markingStyle)}
 
-Match the requested difficulty band exactly. Keep questions self-contained and realistic. Respond with ONLY a JSON object, no prose and no code fences.`;
+SELF-CONTAINED — VERY IMPORTANT: every question must be fully answerable from text alone. NEVER refer to a diagram, figure, graph, image, photograph, map or chart that is "shown", "below", "above" or "provided" — nothing can be displayed to the student. If data is needed, write it out in words/numbers in "context" (a small text data list is fine). You MAY ask the student to draw or sketch their own diagram/graph as part of their answer. Do not write "the diagram shows", "use the graph", "in the figure" or "see the chart".
+
+If the question naturally has several parts, return them as SEPARATE parts, each with its own prompt and marks (label them a, b, c). Otherwise return a single part. Put any shared introduction/data/extract in "context".
+
+Match the requested difficulty band exactly. Respond with ONLY a JSON object, no prose and no code fences.`;
 
   const user = `Subject: ${subject}
 Topic: ${topicName}
@@ -42,18 +79,27 @@ Focus: ${focus || topicName}
 Difficulty: ${level}${avoid}
 
 Return JSON exactly in this shape:
-{"question": "<the full question, including any original extract if needed>", "marks": <integer>}`;
+{"context": "<shared intro/data/extract, or empty string>", "parts": [{"label": "a", "prompt": "<part text>", "marks": <integer>}]}
+Use a single part with "label": "" when the question is not multi-part. Use LaTeX where appropriate.`;
 
   const client = getClient();
-  const msg = await client.messages.create({
-    model: MODEL,
-    max_tokens: 900,
-    temperature: 0.9,
-    system,
-    messages: [{ role: 'user', content: user }],
-  });
-
-  const data = extractJSON(textOf(msg));
-  if (!data.question) return json(502, { error: 'Model did not return a question.' });
-  return json(200, { question: String(data.question), marks: Number(data.marks) || 3 });
+  let best = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const sys = attempt === 0
+      ? system
+      : `${system}\n\nYour previous attempt referred to a diagram/figure/graph/chart that cannot be displayed. Rewrite the question so it is 100% answerable from the text: remove every reference to a visual, and instead write any required data out as numbers/words in "context".`;
+    const msg = await client.messages.create({
+      model: MODEL, max_tokens: 1100, temperature: 0.9, system: sys,
+      messages: [{ role: 'user', content: user }],
+    });
+    const data = extractJSON(textOf(msg));
+    const parts = buildParts(data);
+    if (!parts.length) continue;
+    const marks = parts.reduce((s, p) => s + (Number(p.marks) || 0), 0) || 3;
+    best = { context: String(data.context || ''), parts, marks };
+    const blob = [best.context, ...parts.map((p) => p.prompt)].join(' \n ');
+    if (!refersToMissingVisual(blob)) break; // clean — use it
+  }
+  if (!best) return json(502, { error: 'Model did not return a question.' });
+  return json(200, best);
 });

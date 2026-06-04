@@ -26,8 +26,9 @@ export function generateQuestion({ subject, board, markingStyle, topicName, focu
   return postJSON('generate-question', { subject, board, markingStyle, topicName, focus, difficulty, exclude });
 }
 
-export function markAnswer({ subject, board, markingStyle, topicName, question, marks, studentAnswer }) {
-  return postJSON('mark-answer', { subject, board, markingStyle, topicName, question, marks, studentAnswer });
+// Accepts { subject, markingStyle, topicName, context, parts:[{label,prompt,marks,answer}] }.
+export function markAnswer(payload) {
+  return postJSON('mark-answer', payload);
 }
 
 export function tutor({ subject, markingStyle, topicName, messages }) {
