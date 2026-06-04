@@ -1,14 +1,28 @@
 import { useEffect, useRef, useState } from 'react';
 import { tutor } from '../lib/api.js';
+import { fileToAttachment } from '../lib/files.js';
 import MathText from './MathText.jsx';
+
+// Pull the plain text out of a message whose content may be a string or blocks.
+function textOfContent(content) {
+  if (typeof content === 'string') return content;
+  if (Array.isArray(content)) {
+    const t = content.find((b) => b.type === 'text');
+    return t ? t.text : '';
+  }
+  return '';
+}
 
 export default function Tutor({ subject }) {
   const [topicName, setTopicName] = useState('');
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [attachment, setAttachment] = useState(null); // { block, preview }
   const [busy, setBusy] = useState(false);
+  const [attaching, setAttaching] = useState(false);
   const [error, setError] = useState('');
   const endRef = useRef(null);
+  const fileRef = useRef(null);
 
   const starters = [
     `Explain a tricky idea in ${subject.name} simply`,
@@ -21,17 +35,49 @@ export default function Tutor({ subject }) {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, busy]);
 
-  async function send(text) {
-    const content = (text ?? input).trim();
-    if (!content || busy) return;
+  async function onPickFile(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
     setError('');
-    const next = [...messages, { role: 'user', content }];
+    setAttaching(true);
+    try {
+      const att = await fileToAttachment(file);
+      setAttachment(att);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setAttaching(false);
+    }
+  }
+
+  async function send(text) {
+    const typed = (text ?? input).trim();
+    if ((!typed && !attachment) || busy) return;
+    setError('');
+
+    let userMessage;
+    if (attachment) {
+      const question = typed || 'Can you help me understand the key concept in this handout, step by step?';
+      userMessage = {
+        role: 'user',
+        content: [attachment.block, { type: 'text', text: question }],
+        _preview: attachment.preview,
+        _text: question,
+      };
+    } else {
+      userMessage = { role: 'user', content: typed, _text: typed };
+    }
+
+    const next = [...messages, userMessage];
     setMessages(next);
     setInput('');
+    setAttachment(null);
     setBusy(true);
     try {
-      const { reply } = await tutor({ subject: subject.name, topicName: topicName || undefined, messages: next });
-      setMessages([...next, { role: 'assistant', content: reply }]);
+      const apiMessages = next.map(({ role, content }) => ({ role, content }));
+      const { reply } = await tutor({ subject: subject.name, topicName: topicName || undefined, messages: apiMessages });
+      setMessages([...next, { role: 'assistant', content: reply, _text: reply }]);
     } catch (e) {
       setError(e.message);
       setMessages(messages);
@@ -46,7 +92,9 @@ export default function Tutor({ subject }) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="font-display text-lg">{subject.name} tutor</h2>
-            <p className="text-sm text-slate2">Ask anything. I&apos;ll give hints and nudge you to the answer — not just hand it over.</p>
+            <p className="text-sm text-slate2">
+              Ask anything, or <span className="font-semibold text-ink">upload a handout</span> (photo or PDF) and I&apos;ll explain it.
+            </p>
           </div>
           <label className="text-sm">
             <span className="mr-2 text-slate2">Focus topic</span>
@@ -66,7 +114,7 @@ export default function Tutor({ subject }) {
         <div className="flex-1 space-y-3 overflow-y-auto p-4">
           {messages.length === 0 && (
             <div className="space-y-3">
-              <p className="text-sm text-slate2">Try one of these to get going:</p>
+              <p className="text-sm text-slate2">Try one of these, or tap the paperclip to upload a handout:</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {starters.map((s) => (
                   <button key={s} onClick={() => send(s)} className="rounded-xl border border-line bg-white/70 p-3 text-left text-sm hover:bg-white">
@@ -82,7 +130,15 @@ export default function Tutor({ subject }) {
               <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 leading-relaxed whitespace-pre-line ${
                 m.role === 'user' ? 'bg-ink text-paper rounded-br-sm' : 'bg-white border border-line rounded-bl-sm'
               }`}>
-                <MathText>{m.content}</MathText>
+                {m._preview?.kind === 'image' && (
+                  <img src={m._preview.url} alt="uploaded handout" className="mb-2 max-h-48 rounded-lg border border-white/20" />
+                )}
+                {m._preview?.kind === 'pdf' && (
+                  <div className="mb-2 inline-flex items-center gap-2 rounded-lg bg-white/15 px-2 py-1 text-sm">
+                    📄 {m._preview.name}
+                  </div>
+                )}
+                <MathText>{m._text ?? textOfContent(m.content)}</MathText>
               </div>
             </div>
           ))}
@@ -103,17 +159,47 @@ export default function Tutor({ subject }) {
 
         {error && <p className="px-4 pb-2 text-sm text-coral">{error}</p>}
 
+        {(attachment || attaching) && (
+          <div className="border-t border-line px-3 pt-2">
+            <div className="inline-flex items-center gap-2 rounded-lg border border-line bg-white/70 px-2 py-1 text-sm">
+              {attaching ? (
+                <span className="text-slate2">Preparing file…</span>
+              ) : attachment.preview.kind === 'image' ? (
+                <>
+                  <img src={attachment.preview.url} alt="" className="h-8 w-8 rounded object-cover" />
+                  <span className="max-w-[12rem] truncate">{attachment.preview.name}</span>
+                </>
+              ) : (
+                <span>📄 {attachment.preview.name}</span>
+              )}
+              {attachment && (
+                <button onClick={() => setAttachment(null)} className="ml-1 text-slate2 hover:text-coral" aria-label="Remove attachment">✕</button>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="border-t border-line p-3">
           <div className="flex items-end gap-2">
+            <input ref={fileRef} type="file" accept="image/*,application/pdf" onChange={onPickFile} className="hidden" />
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={busy || attaching}
+              title="Upload a handout (photo or PDF)"
+              className="btn-ghost !px-3 shrink-0"
+            >
+              📎
+            </button>
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
               rows={1}
-              placeholder="Ask a question…  (Enter to send, Shift+Enter for a new line)"
+              placeholder={attachment ? 'Ask about your handout… (or just press Send)' : 'Ask a question…  (Enter to send)'}
               className="max-h-32 flex-1 resize-none rounded-xl border border-line bg-white px-3 py-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
             />
-            <button className="btn-accent" onClick={() => send()} disabled={busy || !input.trim()}>Send</button>
+            <button className="btn-accent" onClick={() => send()} disabled={busy || attaching || (!input.trim() && !attachment)}>Send</button>
           </div>
         </div>
       </div>
