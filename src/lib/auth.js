@@ -66,35 +66,69 @@ function localBootstrap() {
 }
 
 // ---------------------------------------------------------------- cloud mode
-async function userFromSession(session) {
+
+// Build a user object from the JWT claims only (no network needed).
+function userFromJwt(session) {
   if (!session?.user) return null;
-  let profile = null;
-  try {
-    const { data } = await supabase.from('profiles').select('name, board, tier').eq('id', session.user.id).maybeSingle();
-    profile = data;
-  } catch { /* profile may not exist yet */ }
   return {
     id: session.user.id,
     email: session.user.email,
-    name: profile?.name || session.user.user_metadata?.name || '',
-    board: profile?.board ?? session.user.user_metadata?.board ?? null,
-    tier: profile?.tier ?? session.user.user_metadata?.tier ?? null,
+    name: session.user.user_metadata?.name || '',
+    board: session.user.user_metadata?.board ?? null,
+    tier: session.user.user_metadata?.tier ?? null,
   };
+}
+
+// Augment a JWT-built user with the profiles table (board/tier may have been
+// updated post-signup and only live in the DB, not in the JWT).
+async function enrichFromProfile(user) {
+  if (!user) return user;
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('name, board, tier')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (data) return { ...user, name: data.name || user.name, board: data.board ?? user.board, tier: data.tier ?? user.tier };
+  } catch { /* offline — use JWT data */ }
+  return user;
 }
 
 if (isCloud) {
   (async () => {
+    // Phase 1 — unblock the loading screen immediately.
+    // getSession() reads from localStorage (fast). If the stored access token is
+    // expired, Supabase also makes a refresh-token network call here; we race it
+    // against a 6-second timeout so a paused/unreachable project can't hang forever.
+    let session = null;
     try {
-      const { data } = await supabase.auth.getSession();
-      currentUser = await userFromSession(data.session);
-    } catch { currentUser = null; }
+      const timer = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000));
+      const { data } = await Promise.race([supabase.auth.getSession(), timer]);
+      session = data?.session ?? null;
+    } catch { /* timeout or storage error — treat as signed out */ }
+
+    currentUser = userFromJwt(session);
     ready = true;
-    emit();
+    emit(); // loading screen unblocks here
+
+    // Phase 2 — hydrate richer profile data from the DB in the background.
+    // If this network call hangs or fails, the app already works with JWT data.
+    if (currentUser) {
+      const enriched = await enrichFromProfile(currentUser);
+      if (enriched !== currentUser) { currentUser = enriched; emit(); }
+    }
   })();
+
   supabase.auth.onAuthStateChange(async (_event, session) => {
-    currentUser = await userFromSession(session);
+    // For login/logout events: build from JWT first so the UI responds instantly,
+    // then enrich from the DB.
+    currentUser = userFromJwt(session);
     ready = true;
     emit();
+    if (currentUser) {
+      const enriched = await enrichFromProfile(currentUser);
+      if (enriched !== currentUser) { currentUser = enriched; emit(); }
+    }
   });
 } else {
   localBootstrap();
