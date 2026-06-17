@@ -18,7 +18,7 @@ An AI-powered revision platform for **GCSE students across the UK**. A student c
 
 - **Frontend:** React 18 + Vite + Tailwind CSS, KaTeX for maths rendering. Responsive and installable (PWA manifest + icons).
 - **Backend:** Netlify Functions (serverless) that call the **Anthropic Claude** API. The API key lives server-side and is never shipped to the browser.
-- **Accounts & storage:** client-side accounts (passwords salted + SHA-256 hashed via the Web Crypto API) with per-user progress in `localStorage`. See *Going to a real backend* below to move accounts/data to the cloud.
+- **Accounts & storage:** **Supabase** (Postgres + Auth) for cross-device accounts and progress when configured; otherwise an on-device fallback (salted + SHA-256 hashed passwords, progress in `localStorage`) so local dev works with no backend. The app is local-first: writes hit the cache + `localStorage` instantly, then sync to Supabase.
 
 ## Project structure
 
@@ -80,9 +80,20 @@ npx cap open ios       # build/sign in Xcode
 ```
 Point the app at your deployed Netlify URL (or bundle `dist/` and call the functions remotely). Export the `public/icon.svg` to the PNG sizes each store requires (e.g. 512×512, 1024×1024) for the store listings and launcher icons.
 
-## Going to a real backend (recommended before launch)
+## Cloud accounts with Supabase (cross-device login + progress)
 
-Accounts and progress are currently stored on-device. For cross-device sync, password reset and teacher dashboards, swap the storage layer for a hosted backend (e.g. Supabase, Firebase Auth + Firestore, or Netlify Identity + a database). Only `src/lib/auth.js` and `src/lib/storage.js` talk to storage — the rest of the UI calls those helpers, so the change is contained.
+Without any extra config the app uses on-device accounts. To enable real
+cross-device accounts:
+
+1. Create a free project at [supabase.com](https://supabase.com).
+2. **SQL Editor** → paste and run [`supabase/schema.sql`](supabase/schema.sql) — it creates the `profiles` and `user_data` tables and the Row Level Security policies (each user can only touch their own rows).
+3. **Authentication → Providers → Email**: keep Email enabled. For instant sign-up→login (no email step), turn **"Confirm email" off** under Auth settings; leave it on if you'd rather verify emails (users then confirm via email before their first login).
+4. Copy your project's **URL** and **anon public key** (Project Settings → API) into env vars:
+   - locally in `.env`: `VITE_SUPABASE_URL=…` and `VITE_SUPABASE_ANON_KEY=…`
+   - on Netlify: the same two, under Site settings → Environment variables.
+5. Redeploy / restart. The app auto-detects the keys and switches to cloud mode.
+
+The anon key is meant to live in the browser — RLS is what protects the data, so never expose the `service_role` key. Only `src/lib/supabase.js`, `auth.js` and `storage.js` touch the backend; the rest of the UI is unchanged, so you can swap providers later if needed.
 
 ---
 GCSEase · a DentEdTech platform · powered by Anthropic Claude.

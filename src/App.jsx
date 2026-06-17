@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { SUBJECTS_BY_ID } from './data/subjects.js';
 import { BOARDS, BOARDS_BY_ID, boardName } from './data/boards.js';
 import { TIER_LIST, TIERS } from './data/grades.js';
-import { getCurrentUser, onAuthChange, updateProfile } from './lib/auth.js';
+import { getCurrentUser, onAuthChange, isAuthReady, updateProfile } from './lib/auth.js';
+import { onDataChange } from './lib/storage.js';
 
 import AuthScreen from './components/AuthScreen.jsx';
 import Home from './components/Home.jsx';
@@ -32,6 +33,7 @@ const PORTFOLIO_VIEWS = [
 
 export default function App() {
   const [user, setUser] = useState(() => getCurrentUser());
+  const [ready, setReady] = useState(() => isAuthReady());
   const [boardId, setBoardId] = useState(() => getCurrentUser()?.board || 'aqa');
   const [tierId, setTierId] = useState(() => getCurrentUser()?.tier || 'higher');
 
@@ -39,13 +41,16 @@ export default function App() {
   const [subjectId, setSubjectId] = useState(null);
   const [view, setView] = useState('dashboard');
   const [practiceTopic, setPracticeTopic] = useState(null);
-  const [dataNonce, setDataNonce] = useState(0); // bump to refresh progress after restore
+  const [dataNonce, setDataNonce] = useState(0); // bump to refresh progress after sync
 
   useEffect(() => onAuthChange((u) => {
     setUser(u);
+    setReady(true);
     if (u) { setBoardId(u.board || 'aqa'); setTierId(u.tier || 'higher'); }
     else { setSubjectId(null); setRoute('home'); }
   }), []);
+
+  useEffect(() => onDataChange(() => setDataNonce((n) => n + 1)), []);
 
   function chooseBoard(id) { setBoardId(id); updateProfile({ board: id }); }
   function chooseTier(id) { setTierId(id); updateProfile({ tier: id }); }
@@ -73,6 +78,16 @@ export default function App() {
   function startPractice(topicId) { setPracticeTopic(topicId); setView('practice'); }
   function goHome() { setSubjectId(null); setRoute('home'); }
 
+  if (!ready) {
+    return (
+      <div className="grid min-h-screen place-items-center">
+        <div className="flex items-center gap-3 text-slate2">
+          <GCSEaseLogo size={40} />
+          <span className="font-display text-lg">Loading GCSEase…</span>
+        </div>
+      </div>
+    );
+  }
   if (!user) return <AuthScreen onAuthed={setUser} />;
 
   // ---- Header (shared across in-app screens) ----
