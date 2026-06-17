@@ -94,37 +94,39 @@ async function enrichFromProfile(user) {
   return user;
 }
 
-if (isCloud) {
-  (async () => {
-    // Phase 1 — unblock the loading screen immediately.
-    // getSession() reads from localStorage (fast). If the stored access token is
-    // expired, Supabase also makes a refresh-token network call here; we race it
-    // against a 6-second timeout so a paused/unreachable project can't hang forever.
-    let session = null;
-    try {
-      const timer = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000));
-      const { data } = await Promise.race([supabase.auth.getSession(), timer]);
-      session = data?.session ?? null;
-    } catch { /* timeout or storage error — treat as signed out */ }
-
-    currentUser = userFromJwt(session);
-    ready = true;
-    emit(); // loading screen unblocks here
-
-    // Phase 2 — hydrate richer profile data from the DB in the background.
-    // If this network call hangs or fails, the app already works with JWT data.
-    if (currentUser) {
-      const enriched = await enrichFromProfile(currentUser);
-      if (enriched !== currentUser) { currentUser = enriched; emit(); }
+// Synchronously read Supabase's stored session straight from localStorage —
+// no network call, no Supabase API, instant. The session may be expired; that
+// is fine because onAuthStateChange will deliver the verified post-refresh
+// session shortly after and update the UI.
+function readStoredSession() {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('sb-') && key?.endsWith('-auth-token')) {
+        return JSON.parse(localStorage.getItem(key) || 'null')?.currentSession ?? null;
+      }
     }
-  })();
+  } catch { /* private/storage-disabled mode */ }
+  return null;
+}
 
+if (isCloud) {
+  // Phase 1 (synchronous, instant): unblock the loading screen right away using
+  // whatever is in localStorage. No network call → no hangs, no timeouts.
+  // If the stored token is expired we show the app optimistically; if Supabase
+  // can't refresh it later the user is signed out then (brief, not permanent).
+  currentUser = userFromJwt(readStoredSession());
+  ready = true;
+  // No emit() here — onAuthChange's `if (ready) l(currentUser)` fires the
+  // subscriber immediately when React registers it via useEffect.
+
+  // Phase 2 (async): Supabase fires INITIAL_SESSION once the token is verified /
+  // refreshed. This is the authoritative answer. Update the UI then.
   supabase.auth.onAuthStateChange(async (_event, session) => {
-    // For login/logout events: build from JWT first so the UI responds instantly,
-    // then enrich from the DB.
     currentUser = userFromJwt(session);
     ready = true;
     emit();
+    // Background: enrich with profile data from the DB (board/tier overrides).
     if (currentUser) {
       const enriched = await enrichFromProfile(currentUser);
       if (enriched !== currentUser) { currentUser = enriched; emit(); }
