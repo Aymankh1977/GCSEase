@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { tutor } from '../lib/api.js';
 import { fileToAttachment } from '../lib/files.js';
+import { getSubjectStats, getSubjectProgress } from '../lib/storage.js';
+import { estimateLevel, levelSummary } from '../lib/level.js';
 import MathText from './MathText.jsx';
 import SpeakButton from './SpeakButton.jsx';
 
@@ -14,7 +16,7 @@ function textOfContent(content) {
   return '';
 }
 
-export default function Tutor({ subject }) {
+export default function Tutor({ subject, tierId }) {
   const [topicName, setTopicName] = useState('');
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -77,7 +79,21 @@ export default function Tutor({ subject }) {
     setBusy(true);
     try {
       const apiMessages = next.map(({ role, content }) => ({ role, content }));
-      const { reply } = await tutor({ subject: subject.name, topicName: topicName || undefined, messages: apiMessages });
+      const level = estimateLevel(getSubjectStats(subject.id), subject.topics.length, subject.tiered ? tierId : 'all');
+      const prog = getSubjectProgress(subject.id);
+      const weakTopics = Object.entries(prog)
+        .filter(([, p]) => p.mastery != null)
+        .sort((a, b) => a[1].mastery - b[1].mastery)
+        .slice(0, 3)
+        .map(([id]) => subject.topics.find((t) => t.id === id)?.name)
+        .filter(Boolean);
+      const { reply } = await tutor({
+        subject: subject.name, board: subject.board, tier: subject.tier || undefined,
+        topicName: topicName || undefined,
+        studentLevel: levelSummary(level) || undefined,
+        weakTopics: weakTopics.length ? weakTopics : undefined,
+        messages: apiMessages,
+      });
       setMessages([...next, { role: 'assistant', content: reply, _text: reply }]);
     } catch (e) {
       setError(e.message);

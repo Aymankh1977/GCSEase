@@ -2,15 +2,26 @@
 <html lang="en-GB">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="description" content="AI revision agent for GCSE Mathematics (Higher) and more — adaptive practice, step-by-step marking, a hint-first tutor and a weak-area dashboard." />
-    <title>Revise — Juri's Revision Hub</title>
+    <meta name="theme-color" content="#1f8a4c" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#10151b" media="(prefers-color-scheme: dark)" />
+    <meta name="description" content="GCSEase — GCSE revision made easy. All UK exam boards, Foundation & Higher tiers, every subject, grade 1–9 guides, AI practice, marking and a 24/7 tutor." />
+
+    <!-- PWA / mobile (Android & iOS via Capacitor or Add to Home Screen) -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="GCSEase" />
+
+    <title>GCSEase — GCSE revision made easy</title>
 
     <!-- Apply saved theme before paint to avoid a flash -->
     <script>
       try {
-        var t = localStorage.getItem('gcse-revise:theme');
+        var t = localStorage.getItem('gcsease:theme');
         if (t === 'dark' || (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
           document.documentElement.classList.add('dark');
         }

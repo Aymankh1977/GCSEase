@@ -22,15 +22,15 @@ async function postJSON(path, body) {
   return data;
 }
 
-export function generateQuestion({ subject, board, markingStyle, topicName, focus, difficulty, exclude }) {
-  return postJSON('generate-question', { subject, board, markingStyle, topicName, focus, difficulty, exclude });
+export function generateQuestion({ subject, board, tier, gradeBand, studentLevel, markingStyle, topicName, focus, difficulty, exclude }) {
+  return postJSON('generate-question', { subject, board, tier, gradeBand, studentLevel, markingStyle, topicName, focus, difficulty, exclude });
 }
 
-// Accepts { subject, markingStyle, topicName, context, parts:[{label,prompt,marks,answer}] }.
+// Accepts { subject, board, markingStyle, topicName, context, parts:[{label,prompt,marks,answer}] }.
 export function markAnswer(payload) {
   return postJSON('mark-answer', payload);
 }
 
-export function tutor({ subject, markingStyle, topicName, messages }) {
-  return postJSON('tutor', { subject, markingStyle, topicName, messages });
+export function tutor({ subject, board, tier, studentLevel, weakTopics, markingStyle, topicName, messages }) {
+  return postJSON('tutor', { subject, board, tier, studentLevel, weakTopics, markingStyle, topicName, messages });
 }

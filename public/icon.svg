@@ -1,0 +1,42 @@
+<svg width="512" height="512" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GCSEase">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4dec8a"/>
+      <stop offset="50%" stop-color="#14b8a6"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+    <linearGradient id="side" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0e8f86"/>
+      <stop offset="100%" stop-color="#0b6f86"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.45"/>
+      <stop offset="55%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="32%" cy="24%" r="75%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="45%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="cast" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#0a4f5e" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <rect x="9" y="13" width="82" height="82" rx="24" fill="url(#side)"/>
+  <g filter="url(#cast)">
+    <rect x="9" y="7" width="82" height="82" rx="24" fill="url(#tile)"/>
+    <rect x="9" y="7" width="82" height="82" rx="24" fill="url(#glow)"/>
+    <rect x="9" y="7" width="82" height="56" rx="24" fill="url(#sheen)"/>
+  </g>
+
+  <g transform="translate(0 1)">
+    <path d="M67 36 A21 21 0 1 0 67 64" fill="none" stroke="#0a5f6e" stroke-opacity="0.35" stroke-width="11" stroke-linecap="round"/>
+    <rect x="49" y="46.5" width="22" height="11" rx="5.5" fill="#0a5f6e" fill-opacity="0.35"/>
+  </g>
+  <path d="M67 35 A21 21 0 1 0 67 63" fill="none" stroke="#ffffff" stroke-width="11" stroke-linecap="round"/>
+  <rect x="49" y="45.5" width="22" height="11" rx="5.5" fill="#ffffff"/>
+  <path d="M67 35 A21 21 0 0 0 35 50" fill="none" stroke="#ffffff" stroke-opacity="0.5" stroke-width="3" stroke-linecap="round" transform="translate(0 -2.5)"/>
+
+  <path d="M75 22 q2.4 6 8 8 q-5.6 2 -8 8 q-2.4-6 -8-8 q5.6-2 8-8 Z" fill="#bb8a0a" transform="translate(0.5 1)"/>
+  <path d="M75 22 q2.4 6 8 8 q-5.6 2 -8 8 q-2.4-6 -8-8 q5.6-2 8-8 Z" fill="#fde047"/>
+</svg>

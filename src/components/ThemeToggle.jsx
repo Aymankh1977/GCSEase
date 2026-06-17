@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const KEY = 'gcse-revise:theme';
+const KEY = 'gcsease:theme';
 
 export default function ThemeToggle() {
   const [dark, setDark] = useState(

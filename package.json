@@ -1,9 +1,9 @@
 {
-  "name": "gcse-math-revise",
+  "name": "gcsease",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
-  "description": "An AI revision agent for GCSE Mathematics (Higher) — adaptive practice, step-by-step marking, a hint-first tutor, and a weak-area dashboard. Powered by Anthropic Claude.",
+  "description": "GCSEase — GCSE revision made easy. All UK exam boards, Foundation & Higher tiers, every subject, grade 1–9 guides, AI practice, step-by-step marking and a 24/7 tutor. Powered by Anthropic Claude. A DentEdTech platform.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

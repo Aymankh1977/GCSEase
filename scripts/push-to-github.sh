@@ -3,7 +3,7 @@
 # Run from inside the project folder on YOUR machine (where your git credentials live).
 set -e
 
-REPO="https://github.com/Aymankh1977/GCSE-Math-Revise.git"
+REPO="https://github.com/Aymankh1977/GCSEase.git"
 
 if [ ! -d .git ]; then
   git init
@@ -14,7 +14,7 @@ else
 fi
 
 git add .
-git commit -m "Initial commit: GCSE Maths (Higher) AI revision agent"
+git commit -m "GCSEase — multi-board, multi-subject GCSE revision platform"
 echo
 echo "About to push to: $REPO"
 echo "You will be prompted for your GitHub credentials / token."

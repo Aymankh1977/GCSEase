@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { topicsByGroup } from '../data/subjects.js';
+import { gradeBandForDifficulty } from '../data/grades.js';
 import { generateQuestion, markAnswer } from '../lib/api.js';
-import { recordAttempt, getProgress } from '../lib/storage.js';
+import { recordAttempt, getProgress, getSubjectStats } from '../lib/storage.js';
+import { estimateLevel, levelSummary } from '../lib/level.js';
 import MathText from './MathText.jsx';
 import SpeakButton from './SpeakButton.jsx';
 
@@ -23,7 +25,7 @@ function ScorePill({ score }) {
 
 const partLabel = (p, i) => (p.label ? `(${p.label})` : `Part ${i + 1}`);
 
-export default function Practice({ subject, initialTopicId, onTopicConsumed }) {
+export default function Practice({ subject, tierId, initialTopicId, onTopicConsumed }) {
   const grouped = useMemo(() => topicsByGroup(subject), [subject]);
   const topicsById = useMemo(() => Object.fromEntries(subject.topics.map((t) => [t.id, t])), [subject]);
   const [topicId, setTopicId] = useState(initialTopicId || subject.topics[0].id);
@@ -50,8 +52,12 @@ export default function Practice({ subject, initialTopicId, onTopicConsumed }) {
     const t = topicsById[tid];
     setError(''); setResult(null); setAnswers([]); setQ(null); setPhase('loadingQ');
     try {
+      const level = estimateLevel(getSubjectStats(subject.id), subject.topics.length, subject.tiered ? tierId : 'all');
       const data = await generateQuestion({
         subject: subject.name, board: subject.board, markingStyle: subject.markingStyle,
+        tier: subject.tier || undefined,
+        gradeBand: gradeBandForDifficulty(diff, subject.tiered ? tierId : 'higher'),
+        studentLevel: levelSummary(level) || undefined,
         topicName: t.name, focus: t.focus, difficulty: diff, exclude: seen,
       });
       const parts = Array.isArray(data.parts) && data.parts.length
@@ -80,12 +86,12 @@ export default function Practice({ subject, initialTopicId, onTopicConsumed }) {
     setPhase('marking'); setError('');
     try {
       const r = await markAnswer({
-        subject: subject.name, markingStyle: subject.markingStyle, topicName: topic.name,
+        subject: subject.name, board: subject.board, markingStyle: subject.markingStyle, topicName: topic.name,
         context: q.context,
         parts: q.parts.map((p, i) => ({ label: p.label, prompt: p.prompt, marks: p.marks, answer: answers[i] })),
       });
       setResult(r);
-      recordAttempt(subject.id, topic.id, r.score);
+      recordAttempt(subject.id, topic.id, r.score, difficulty);
       setPhase('marked');
     } catch (e) {
       setError(e.message); setPhase('answering');

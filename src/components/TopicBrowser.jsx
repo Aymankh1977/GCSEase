@@ -16,7 +16,7 @@ export default function TopicBrowser({ subject, onPractice }) {
   return (
     <div className="space-y-6">
       <div className="card rise p-5">
-        <h2 className="font-display text-lg">{subject.name}: every topic in this PPE</h2>
+        <h2 className="font-display text-lg">{subject.name}: every topic</h2>
         <p className="text-sm text-slate2">Tap a topic to practise it{subject.topics.some((t) => t.codes) ? ', or reveal its Sparx codes for Independent Learning' : ''}.</p>
       </div>
 

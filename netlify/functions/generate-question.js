@@ -1,9 +1,9 @@
 import { getClient, MODEL, json, parseBody, textOf, extractJSON, wrap } from './_lib.js';
 
 const DIFFICULTY = {
-  1: 'foundational (grade 3–4): short, one or two steps',
-  2: 'standard (grade 5–6): the typical multi-step exam question',
-  3: 'stretch (grade 7–9): demanding problem-solving, analysis or evaluation',
+  1: 'foundational: short, one or two steps',
+  2: 'standard: the typical multi-step exam question',
+  3: 'stretch: demanding problem-solving, analysis or evaluation',
 };
 
 function styleGuidance(markingStyle) {
@@ -12,12 +12,14 @@ function styleGuidance(markingStyle) {
       return `Write an exam-style maths question (it may have parts). Use LaTeX for ALL mathematics (single $...$ inline, double $$...$$ display). Give a sensible mark tariff per part (1–6 each).`;
     case 'science':
       return `Write an exam-style question (it may have parts). Use proper units and command words (state, describe, explain, calculate, evaluate). Use LaTeX for any formulae/equations ($...$). A 6-mark extended-response part is good for higher difficulty.`;
+    case 'language':
+      return `Write a modern-foreign-language exam-style task. Choose ONE of: (a) a short reading comprehension — write your own ORIGINAL short passage in the target language (50–90 words) in "context", then ask comprehension questions (these may be answered in English); (b) a translation into or out of the target language; or (c) a short writing task with a clear word count. Keep vocabulary at GCSE level. Make clear which language to answer in.`;
     case 'english-language':
-      return `If the topic is a READING skill: first WRITE YOUR OWN ORIGINAL short fiction extract (roughly 120–180 words — your own writing, never copied), put it in "context", then ask the matching exam question as the part(s). If the topic is WRITING: give a single imaginative writing task. Mark tariff appropriate (writing tasks ~40).`;
+      return `If the topic is a READING skill: first WRITE YOUR OWN ORIGINAL short fiction or non-fiction extract (roughly 120–180 words — your own writing, never copied), put it in "context", then ask the matching exam question as the part(s). If the topic is WRITING: give a single writing task. Mark tariff appropriate (writing tasks ~40).`;
     case 'english-literature':
-      return `Write an exam-style question. For MACBETH you may quote a short extract (out of copyright) in "context". For REFUGEE BOY do NOT reproduce any text — set a theme or character essay question instead. Mark tariff ~20–40.`;
-    default: // 'essay' — humanities & vocational
-      return `Write an exam-style question using appropriate GCSE command words ("Describe", "Explain", "Outline", "Analyse", "Evaluate", "To what extent"). Realistic tariff per part (commonly 2, 4, 8, 9, 12 or 16).`;
+      return `Write an exam-style question. You may quote a SHORT out-of-copyright extract (e.g. Shakespeare) in "context". For modern/in-copyright set texts do NOT reproduce text — set a theme or character essay question instead. Mark tariff ~20–40.`;
+    default: // 'essay' — humanities & social sciences
+      return `Write an exam-style question using appropriate GCSE command words ("Describe", "Explain", "Outline", "Analyse", "Evaluate", "To what extent", "Discuss"). Realistic tariff per part (commonly 2, 4, 6, 8, 9, 12 or 16).`;
   }
 }
 
@@ -55,17 +57,19 @@ function buildParts(data) {
 }
 
 export const handler = wrap(async (event) => {
-  const { subject, board, markingStyle = 'essay', topicName, focus, difficulty = 2, exclude = [] } = parseBody(event);
+  const { subject, board, tier, gradeBand, studentLevel, markingStyle = 'essay', topicName, focus, difficulty = 2, exclude = [] } = parseBody(event);
   if (!subject || !topicName) return json(400, { error: 'subject and topicName are required.' });
 
-  const level = DIFFICULTY[difficulty] || DIFFICULTY[2];
+  const level = `${DIFFICULTY[difficulty] || DIFFICULTY[2]}${gradeBand ? ` — pitch it at around ${gradeBand}` : ''}`;
+  const tierNote = tier ? ` at ${tier} tier` : '';
+  const levelNote = studentLevel ? `\nThe student is currently ${studentLevel}; calibrate the question so it stretches them appropriately within the band above.` : '';
   const avoid = Array.isArray(exclude) && exclude.length
     ? `\nDo NOT repeat any of these recently-used questions:\n- ${exclude.slice(-6).join('\n- ')}`
     : '';
 
-  const system = `You are an experienced UK GCSE ${subject} teacher writing exam-style questions${board ? ` for the ${board} specification` : ''}. You write for a Year 10 student sitting a mock (PPE) exam.
+  const system = `You are an experienced UK GCSE ${subject} teacher writing exam-style questions${board ? ` for the ${board} specification` : ''}${tierNote}. You write for a GCSE student practising for their exams.
 
-${styleGuidance(markingStyle)}
+${styleGuidance(markingStyle)}${levelNote}
 
 SELF-CONTAINED — VERY IMPORTANT: every question must be fully answerable from text alone. NEVER refer to a diagram, figure, graph, image, photograph, map or chart that is "shown", "below", "above" or "provided" — nothing can be displayed to the student. If data is needed, write it out in words/numbers in "context" (a small text data list is fine). You MAY ask the student to draw or sketch their own diagram/graph as part of their answer. Do not write "the diagram shows", "use the graph", "in the figure" or "see the chart".
 

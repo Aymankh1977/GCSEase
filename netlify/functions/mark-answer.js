@@ -3,21 +3,23 @@ import { getClient, MODEL, json, parseBody, textOf, extractJSON, wrap } from './
 function markGuidance(markingStyle) {
   switch (markingStyle) {
     case 'maths':
-      return `Mark like an Edexcel maths examiner: award method marks for valid working even if the final answer is wrong. Use LaTeX for maths. Give a clear worked solution as numbered steps.`;
+      return `Mark like a GCSE maths examiner: award method marks for valid working even if the final answer is wrong. Use LaTeX for maths. Give a clear worked solution as numbered steps.`;
     case 'science':
-      return `Mark like an AQA science examiner: reward correct points, working, units and use of command words. For extended answers, judge against levels. Use LaTeX for any equations. Give concise model-answer / mark-scheme points.`;
+      return `Mark like a GCSE science examiner: reward correct points, working, units and use of command words. For extended answers, judge against levels. Use LaTeX for any equations. Give concise model-answer / mark-scheme points.`;
+    case 'language':
+      return `Mark like a GCSE modern-foreign-language examiner. For comprehension, reward correct answers. For translation, reward accuracy of meaning, verb forms, genders/agreement and spelling. For writing, judge communication, range of language and accuracy. Give a corrected model version and note the most useful fix.`;
     case 'english-language':
       return `Mark like an English Language examiner using the relevant assessment objectives (AO1, AO2, AO4, or AO5/AO6 for writing). Say what hit the level and what would push it higher. Give indicative content / a model paragraph, not a full essay.`;
     case 'english-literature':
       return `Mark like an English Literature examiner using levels (AO1 response & references, AO2 methods, AO3 context). Praise specific strengths and name one concrete improvement. Give indicative content (key points & quotations), not a full essay.`;
-    default: // essay — humanities & vocational
+    default: // essay — humanities & social sciences
       return `Mark like a GCSE examiner using a levels-based mark scheme appropriate to the command word and tariff. Reward knowledge, application, analysis and (where relevant) evaluation. Give indicative content / model points rather than a long essay.`;
   }
 }
 
 export const handler = wrap(async (event) => {
   const body = parseBody(event);
-  const { subject, markingStyle = 'essay', topicName, context = '' } = body;
+  const { subject, board, markingStyle = 'essay', topicName, context = '' } = body;
 
   // Accept the multi-part shape, or fall back to the old single-question shape.
   let parts = Array.isArray(body.parts) ? body.parts : null;
@@ -35,7 +37,7 @@ QUESTION: ${p.prompt}
 STUDENT ANSWER: ${p.answer && String(p.answer).trim() ? p.answer : '(no answer given)'}`;
   }).join('\n\n');
 
-  const system = `You are a supportive but rigorous UK GCSE ${subject || ''} examiner marking a Year 10 mock answer.
+  const system = `You are a supportive but rigorous UK GCSE ${subject || ''} examiner${board ? ` for the ${board} specification` : ''} marking a student's practice answer.
 
 ${markGuidance(markingStyle)}
 

@@ -18,12 +18,17 @@ function sanitizeContent(content) {
 }
 
 export const handler = wrap(async (event) => {
-  const { subject, topicName, messages } = parseBody(event);
+  const { subject, board, tier, topicName, studentLevel, weakTopics, messages } = parseBody(event);
   if (!Array.isArray(messages) || messages.length === 0) {
     return json(400, { error: 'messages array is required.' });
   }
 
-  const system = `You are a friendly, patient UK GCSE ${subject || ''} tutor for a Year 10 student preparing for Higher-tier mock exams.
+  const context = [board ? `the ${board} specification` : '', tier ? `${tier} tier` : '']
+    .filter(Boolean).join(', ');
+  const levelLine = studentLevel
+    ? `\n\nWHERE THE STUDENT IS: they are currently ${studentLevel}${Array.isArray(weakTopics) && weakTopics.length ? `, and tend to struggle most with: ${weakTopics.join(', ')}` : ''}. When they ask how to improve or what to revise, give specific, achievable next steps aimed at the next grade up — don't just be generic.`
+    : '';
+  const system = `You are a friendly, patient UK GCSE ${subject || ''} tutor for a student preparing for their GCSE exams${context ? ` (${context})` : ''}.${levelLine}
 
 Your teaching style is HINT-FIRST for practice questions: guide with a leading question or the next single step, then invite the student to try, and only give the full answer if they ask or after a genuine attempt.
 

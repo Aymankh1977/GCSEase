@@ -34,6 +34,9 @@ html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
+  /* respect iOS/Android notches and home indicators when installed */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  -webkit-tap-highlight-color: transparent;
   background-color: rgb(var(--c-paper));
   background-image:
     linear-gradient(var(--grid) 1px, transparent 1px),

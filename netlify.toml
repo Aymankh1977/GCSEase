@@ -1,4 +1,4 @@
-# Netlify configuration for GCSE-Math-Revise
+# Netlify configuration for GCSEase
 [build]
   command = "npm run build"
   publish = "dist"
