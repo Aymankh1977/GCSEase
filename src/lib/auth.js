@@ -21,7 +21,14 @@ let ready = !isCloud; // local mode resolves synchronously below
 const listeners = new Set();
 
 function emit() { for (const l of listeners) l(currentUser); }
-export function onAuthChange(l) { listeners.add(l); return () => listeners.delete(l); }
+export function onAuthChange(l) {
+  listeners.add(l);
+  // If auth already resolved before this listener registered, call it now so
+  // callers that subscribe after the initial emit don't miss it (race condition
+  // on page refresh: the IIFE can complete before React's useEffect runs).
+  if (ready) l(currentUser);
+  return () => listeners.delete(l);
+}
 export function isAuthReady() { return ready; }
 export function getCurrentUser() { return currentUser; }
 
