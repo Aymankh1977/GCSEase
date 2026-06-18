@@ -46,6 +46,8 @@ let _currentAudio = null; // HTMLAudioElement
 
 async function speakViaAPI(text, { onend } = {}) {
   if (_currentAudio) { _currentAudio.pause(); _currentAudio = null; }
+  // Kill any in-progress browser speech so it can't bleed into the API audio
+  if (isSpeechSupported()) window.speechSynthesis.cancel();
   const res = await fetch('/.netlify/functions/speak', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
