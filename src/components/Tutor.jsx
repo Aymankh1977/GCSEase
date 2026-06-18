@@ -222,7 +222,7 @@ export default function Tutor({ subject, tierId }) {
             <div key={m._id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {m.role === 'assistant' && (
                 <div className="mr-2 mt-1 shrink-0">
-                  <span className="grid h-7 w-7 place-items-center rounded-full bg-accentSoft text-base">🤖</span>
+                  <span className="grid h-7 w-7 place-items-center rounded-full bg-accentSoft text-[10px] font-bold tracking-wide text-accent">AI</span>
                 </div>
               )}
               <div className={`max-w-[82%] rounded-2xl px-4 py-2.5 leading-relaxed whitespace-pre-line ${
@@ -235,18 +235,18 @@ export default function Tutor({ subject, tierId }) {
                 )}
                 {m._preview?.kind === 'pdf' && (
                   <div className="mb-2 inline-flex items-center gap-2 rounded-lg bg-surface/15 px-2 py-1 text-sm">
-                    📄 {m._preview.name}
+                    PDF: {m._preview.name}
                   </div>
                 )}
                 <MathText>{m._text ?? textOfContent(m.content)}</MathText>
-                {m.role === 'assistant' && isSpeechSupported() && (
+                {m.role === 'assistant' && (
                   <button
                     type="button"
                     onClick={() => togglePlay(m._text ?? textOfContent(m.content), m._id)}
                     title={playingId === m._id ? 'Stop' : 'Listen'}
                     className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface/60 px-2 py-1 text-xs font-semibold text-slate2 transition hover:bg-surface hover:text-ink"
                   >
-                    {playingId === m._id ? '⏹ Stop' : '🔊 Listen'}
+                    {playingId === m._id ? 'Stop' : 'Listen'}
                   </button>
                 )}
               </div>
@@ -255,7 +255,7 @@ export default function Tutor({ subject, tierId }) {
 
           {busy && (
             <div className="flex items-end justify-start gap-2">
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-accentSoft text-base shrink-0">🤖</span>
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-accentSoft text-[10px] font-bold tracking-wide text-accent shrink-0">AI</span>
               <div className="rounded-2xl rounded-bl-sm border border-line bg-surface px-4 py-2.5 text-slate2">
                 <span className="inline-flex gap-1">
                   <span className="animate-bounce">·</span>
@@ -307,9 +307,10 @@ export default function Tutor({ subject, tierId }) {
               onClick={() => fileRef.current?.click()}
               disabled={busy || attaching}
               title="Upload a handout (photo or PDF)"
-              className="btn-ghost !px-3 shrink-0"
+              className="btn-ghost !px-2.5 shrink-0"
             >
-              📎
+              {/* paperclip */}
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.41 17.41a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
             </button>
             {isMicSupported() && (
               <button
@@ -317,9 +318,10 @@ export default function Tutor({ subject, tierId }) {
                 onClick={toggleMic}
                 disabled={busy}
                 title={listening ? 'Stop listening' : 'Speak your question'}
-                className={`btn-ghost !px-3 shrink-0 transition ${listening ? 'text-accent ring-2 ring-accent rounded-xl' : ''}`}
+                className={`btn-ghost !px-2.5 shrink-0 transition ${listening ? 'text-accent ring-2 ring-accent rounded-xl' : ''}`}
               >
-                🎙
+                {/* microphone */}
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
               </button>
             )}
             <textarea

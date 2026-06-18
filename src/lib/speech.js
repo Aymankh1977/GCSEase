@@ -1,18 +1,16 @@
-// Read text aloud using the browser's built-in speech synthesis (no API cost,
-// works offline). We also tidy markdown/LaTeX so it reads naturally rather than
-// saying "dollar", "backslash frac", etc.
+// Text-to-speech with two tiers:
+//   1. OpenAI TTS via Netlify function — neural quality, like ChatGPT voice
+//   2. Browser Web Speech API — fallback when OpenAI key is not configured
 
 export function isSpeechSupported() {
   return typeof window !== 'undefined' && 'speechSynthesis' in window;
 }
 
+// Strip markdown/LaTeX so TTS reads naturally
 export function cleanForSpeech(raw) {
   let s = String(raw || '');
-  // code blocks / inline code
   s = s.replace(/```[\s\S]*?```/g, ' (code) ').replace(/`([^`]*)`/g, '$1');
-  // math delimiters: keep the inner content, drop the $ signs
   s = s.replace(/\$\$([\s\S]*?)\$\$/g, ' $1 ').replace(/\$([^$]*)\$/g, ' $1 ');
-  // common LaTeX -> spoken words
   const map = [
     [/\\times/g, ' times '],
     [/\\div/g, ' divided by '],
@@ -32,32 +30,55 @@ export function cleanForSpeech(raw) {
     [/\^\{?3\}?/g, ' cubed '],
     [/\^\{?([0-9a-zA-Z]+)\}?/g, ' to the power $1 '],
     [/_\{?([0-9a-zA-Z]+)\}?/g, ' $1 '],
-    [/\\[a-zA-Z]+/g, ' '], // drop any remaining LaTeX commands
+    [/\\[a-zA-Z]+/g, ' '],
   ];
   for (const [re, rep] of map) s = s.replace(re, rep);
-  // markdown emphasis / headers / quotes; turn bullets into pauses
-  s = s.replace(/^\s*[-•]\s+/gm, ', ');
+  s = s.replace(/^\s*[-•]\s+/gm, '. ');
   s = s.replace(/[*_#>|]/g, ' ');
   s = s.replace(/[{}]/g, ' ');
   s = s.replace(/\s+/g, ' ').trim();
   return s;
 }
 
+// ---- OpenAI TTS (primary — neural quality) ----
+
+let _currentAudio = null; // HTMLAudioElement
+
+async function speakViaAPI(text, { onend } = {}) {
+  if (_currentAudio) { _currentAudio.pause(); _currentAudio = null; }
+  const res = await fetch('/.netlify/functions/speak', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: cleanForSpeech(text), voice: 'nova' }),
+  });
+  if (!res.ok) throw new Error('TTS API failed');
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const audio = new Audio(url);
+  _currentAudio = audio;
+  audio.onended = () => { URL.revokeObjectURL(url); _currentAudio = null; onend?.(); };
+  audio.onerror = () => { URL.revokeObjectURL(url); _currentAudio = null; onend?.(); };
+  audio.play();
+}
+
+function stopAPI() {
+  if (_currentAudio) { _currentAudio.pause(); _currentAudio = null; }
+}
+
+// ---- Browser Web Speech API (fallback) ----
+
 let _cachedVoice = null;
 if (isSpeechSupported()) {
-  // voices load asynchronously in some browsers
   window.speechSynthesis.onvoiceschanged = () => { _cachedVoice = null; };
 }
+
 function scoreVoice(v) {
-  // Prefer high-quality natural/neural/enhanced voices over robotic TTS
   let score = 0;
   const name = v.name.toLowerCase();
   if (/neural|natural|enhanced|premium|wavenet|studio/i.test(name)) score += 40;
   if (/google/i.test(name)) score += 20;
   if (/microsoft/i.test(name) && !/zira|david|mark/i.test(name)) score += 15;
-  // Prefer Samantha / Karen / Daniel (good OS built-in voices)
   if (/samantha|karen|daniel|rishi|serena|oliver/i.test(name)) score += 25;
-  // British English first, then any English
   if (/en[-_]GB/i.test(v.lang)) score += 10;
   else if (/^en/i.test(v.lang)) score += 5;
   return score;
@@ -72,8 +93,8 @@ function pickVoice() {
   return _cachedVoice;
 }
 
-export function speak(text, { onend } = {}) {
-  if (!isSpeechSupported()) return false;
+function speakBrowser(text, { onend } = {}) {
+  if (!isSpeechSupported()) return;
   const synth = window.speechSynthesis;
   synth.cancel();
   const u = new SpeechSynthesisUtterance(cleanForSpeech(text));
@@ -84,11 +105,27 @@ export function speak(text, { onend } = {}) {
   u.pitch = 1.05;
   if (onend) { u.onend = onend; u.onerror = onend; }
   synth.speak(u);
-  return true;
+}
+
+function stopBrowser() {
+  if (isSpeechSupported()) window.speechSynthesis.cancel();
+}
+
+// ---- Unified speak / stop ----
+// Tries OpenAI TTS first; if the server returns an error (no key configured),
+// falls back silently to browser speech.
+
+export async function speak(text, { onend } = {}) {
+  try {
+    await speakViaAPI(text, { onend });
+  } catch {
+    speakBrowser(text, { onend });
+  }
 }
 
 export function stopSpeaking() {
-  if (isSpeechSupported()) window.speechSynthesis.cancel();
+  stopAPI();
+  stopBrowser();
 }
 
 // ---- Speech recognition (mic input) ----
@@ -108,7 +145,7 @@ export function startListening({ onResult, onEnd, onError } = {}) {
   return rec;
 }
 
-// Tiny pub/sub so only one "Read aloud" button is active at a time.
+// ---- Pub/sub: one active speaker at a time ----
 const _listeners = new Set();
 let _current = null;
 export function setCurrent(id) { _current = id; _listeners.forEach((l) => l(id)); }
