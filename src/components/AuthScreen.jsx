@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { signUp, logIn } from '../lib/auth.js';
 import { importData } from '../lib/storage.js';
-import { TIER_LIST } from '../data/grades.js';
 import { GCSEaseLogo } from './Logo.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import Footer from './Footer.jsx';
 
 export default function AuthScreen({ onAuthed }) {
   const [mode, setMode] = useState('signup'); // 'signup' | 'login'
-  const [form, setForm] = useState({ name: '', email: '', password: '', tier: 'higher' });
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -103,18 +102,6 @@ export default function AuthScreen({ onAuthed }) {
                 <input type="password" value={form.password} onChange={set('password')} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} placeholder="At least 6 characters" className={inputCls} />
               </Field>
 
-              {mode === 'signup' && (
-                <Field label="Default tier (you can change this any time)">
-                  <div className="flex gap-1 rounded-xl border border-line bg-surface p-1">
-                    {TIER_LIST.map((t) => (
-                      <button type="button" key={t.id} onClick={() => setForm((f) => ({ ...f, tier: t.id }))}
-                        className={`flex-1 rounded-lg px-2 py-2 text-sm font-semibold transition ${form.tier === t.id ? 'bg-ink text-paper' : 'text-slate2 hover:text-ink'}`}>
-                        {t.short}
-                      </button>
-                    ))}
-                  </div>
-                </Field>
-              )}
 
               {error && <p className="rounded-lg bg-coral/10 px-3 py-2 text-sm text-coral">{error}</p>}
               {notice && <p className="rounded-lg bg-accentSoft px-3 py-2 text-sm text-accent">{notice}</p>}

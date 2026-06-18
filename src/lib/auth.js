@@ -195,18 +195,22 @@ export async function logIn({ email, password }) {
   return currentUser;
 }
 
-export async function logOut() {
+export function logOut() {
+  // Do NOT await supabase.auth.signOut() — it acquires an internal lock that
+  // autoRefreshToken can hold indefinitely, causing the button to hang forever.
+  // Fire it and forget; what actually matters is clearing local storage.
   if (isCloud) {
-    // Local scope avoids a network round-trip that can fail or be slow.
-    try { await supabase.auth.signOut({ scope: 'local' }); } catch { /* ignore */ }
-    // Wipe every Supabase / sb- key from both localStorage and sessionStorage
-    // so no stale token survives the reload.
+    try { supabase.auth.signOut({ scope: 'local' }).catch(() => {}); } catch { /* ignore */ }
+    // Synchronously wipe every Supabase key from both storages so no stale
+    // token survives the page reload.
     try {
       for (const store of [localStorage, sessionStorage]) {
-        for (let i = store.length - 1; i >= 0; i--) {
+        const keys = [];
+        for (let i = 0; i < store.length; i++) {
           const k = store.key(i);
-          if (k && (k.startsWith('sb-') || k.includes('supabase'))) store.removeItem(k);
+          if (k && (k.startsWith('sb-') || k.includes('supabase'))) keys.push(k);
         }
+        keys.forEach((k) => store.removeItem(k));
       }
     } catch { /* ignore */ }
   } else {
