@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SUBJECTS_BY_ID } from './data/subjects.js';
-import { BOARDS, BOARDS_BY_ID, boardName } from './data/boards.js';
+import { BOARDS, BOARDS_BY_ID, boardName } from './data/boards.js'; // BOARDS still used in boardPickerModal
 import { TIER_LIST, TIERS } from './data/grades.js';
 import { getCurrentUser, onAuthChange, isAuthReady, updateProfile } from './lib/auth.js';
 import { onDataChange } from './lib/storage.js';
@@ -106,15 +106,6 @@ export default function App() {
           <span className="font-display text-lg font-semibold">GCSEase</span>
         </button>
         <div className="flex items-center gap-2">
-          {/* quick board + tier (one-click, always visible) */}
-          <select
-            value={boardId}
-            onChange={(e) => chooseBoard(e.target.value)}
-            className="hidden rounded-lg border border-line bg-surface/60 px-2 py-1.5 text-sm font-semibold sm:block"
-            title="Exam board"
-          >
-            {BOARDS.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </select>
           <div className="hidden items-center gap-0.5 rounded-lg border border-line bg-surface/60 p-0.5 sm:flex">
             {TIER_LIST.map((t) => (
               <button key={t.id} onClick={() => chooseTier(t.id)}
