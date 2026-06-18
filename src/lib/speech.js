@@ -58,7 +58,15 @@ async function speakViaAPI(text, { onend } = {}) {
   _currentAudio = audio;
   audio.onended = () => { URL.revokeObjectURL(url); _currentAudio = null; onend?.(); };
   audio.onerror = () => { URL.revokeObjectURL(url); _currentAudio = null; onend?.(); };
-  audio.play();
+  try {
+    await audio.play();
+  } catch (e) {
+    // Browser blocked autoplay (NotAllowedError) — clean up and let the
+    // outer catch fall back to browser speech synthesis.
+    URL.revokeObjectURL(url);
+    _currentAudio = null;
+    throw e;
+  }
 }
 
 function stopAPI() {
