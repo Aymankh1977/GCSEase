@@ -1,24 +1,25 @@
-// Proxies text to OpenAI TTS and returns MP3 audio.
-// Keeps the API key server-side; the browser never sees it.
-// Voice: "nova" — warm, natural, sounds close to ChatGPT voice.
+// Proxies text to Google Cloud Text-to-Speech and returns MP3 audio.
+// Voice: en-GB-Neural2-A — natural British English (Neural2 tier).
+// Free tier: 1 million characters per month.
+// Docs: https://cloud.google.com/text-to-speech
 
 export const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.GOOGLE_TTS_API_KEY;
   if (!apiKey) {
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'OPENAI_API_KEY is not set on the server.' }),
+      body: JSON.stringify({ error: 'GOOGLE_TTS_API_KEY is not set on the server.' }),
     };
   }
 
-  let text, voice;
+  let text;
   try {
-    ({ text, voice = 'nova' } = JSON.parse(event.body || '{}'));
+    ({ text } = JSON.parse(event.body || '{}'));
   } catch {
     return { statusCode: 400, body: 'Bad JSON' };
   }
@@ -31,34 +32,42 @@ export const handler = async (event) => {
     };
   }
 
-  const res = await fetch('https://api.openai.com/v1/audio/speech', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'tts-1',
-      voice,
-      input: text.slice(0, 4096),
-      response_format: 'mp3',
-    }),
-  });
+  const res = await fetch(
+    `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        input: { text: text.slice(0, 5000) },
+        voice: {
+          languageCode: 'en-GB',
+          name: 'en-GB-Neural2-A',   // warm, natural British female voice
+          ssmlGender: 'FEMALE',
+        },
+        audioConfig: {
+          audioEncoding: 'MP3',
+          speakingRate: 0.95,        // slightly slower = more natural pacing
+          pitch: 1.0,
+          effectsProfileId: ['headphone-class-device'],
+        },
+      }),
+    }
+  );
 
   if (!res.ok) {
     const err = await res.text();
     return {
       statusCode: res.status,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: `OpenAI TTS error: ${err.slice(0, 200)}` }),
+      body: JSON.stringify({ error: `Google TTS error: ${err.slice(0, 300)}` }),
     };
   }
 
-  const buffer = Buffer.from(await res.arrayBuffer());
+  const { audioContent } = await res.json();
   return {
     statusCode: 200,
     headers: { 'Content-Type': 'audio/mpeg' },
     isBase64Encoded: true,
-    body: buffer.toString('base64'),
+    body: audioContent, // Google already returns base64
   };
 };

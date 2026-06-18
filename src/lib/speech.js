@@ -1,6 +1,6 @@
 // Text-to-speech with two tiers:
-//   1. OpenAI TTS via Netlify function — neural quality, like ChatGPT voice
-//   2. Browser Web Speech API — fallback when OpenAI key is not configured
+//   1. Google Cloud TTS via Netlify function — Neural2 quality, very natural
+//   2. Browser Web Speech API — fallback when Google key is not configured
 
 export function isSpeechSupported() {
   return typeof window !== 'undefined' && 'speechSynthesis' in window;

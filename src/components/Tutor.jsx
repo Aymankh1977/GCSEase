@@ -44,6 +44,7 @@ export default function Tutor({ subject, tierId }) {
   const [playingId, setPlayingId] = useState(null);
   const endRef = useRef(null);
   const fileRef = useRef(null);
+  const pdfRef = useRef(null);
   const recRef = useRef(null);
   const nextIdRef = useRef(0);
 
@@ -207,7 +208,7 @@ export default function Tutor({ subject, tierId }) {
         <div className="flex-1 space-y-3 overflow-y-auto p-4">
           {messages.length === 0 && (
             <div className="space-y-3">
-              <p className="text-sm text-slate2">Tap a starter below, type your question, or press the mic 🎙 to speak:</p>
+              <p className="text-sm text-slate2">Tap a starter below, type or speak your question, or upload a PDF / photo:</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {starters.map((s) => (
                   <button key={s} onClick={() => send(s)} className="rounded-xl border border-line bg-surface/70 p-3 text-left text-sm hover:bg-surface">
@@ -234,8 +235,9 @@ export default function Tutor({ subject, tierId }) {
                   <img src={m._preview.url} alt="uploaded handout" className="mb-2 max-h-48 rounded-lg border border-white/20" />
                 )}
                 {m._preview?.kind === 'pdf' && (
-                  <div className="mb-2 inline-flex items-center gap-2 rounded-lg bg-surface/15 px-2 py-1 text-sm">
-                    PDF: {m._preview.name}
+                  <div className="mb-2 inline-flex items-center gap-1.5 rounded-lg bg-surface/15 px-2.5 py-1.5 text-sm font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    {m._preview.name}
                   </div>
                 )}
                 <MathText>{m._text ?? textOfContent(m.content)}</MathText>
@@ -281,7 +283,10 @@ export default function Tutor({ subject, tierId }) {
                   <span className="max-w-[12rem] truncate">{attachment.preview.name}</span>
                 </>
               ) : (
-                <span>📄 {attachment.preview.name}</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  {attachment.preview.name}
+                </span>
               )}
               {attachment && (
                 <button onClick={() => setAttachment(null)} className="ml-1 text-slate2 hover:text-coral" aria-label="Remove attachment">✕</button>
@@ -301,16 +306,29 @@ export default function Tutor({ subject, tierId }) {
             </div>
           )}
           <div className="flex items-end gap-2">
-            <input ref={fileRef} type="file" accept="image/*,application/pdf" onChange={onPickFile} className="hidden" />
+            {/* image upload */}
+            <input ref={fileRef} type="file" accept="image/*" onChange={onPickFile} className="hidden" />
+            {/* pdf upload */}
+            <input ref={pdfRef} type="file" accept="application/pdf" onChange={onPickFile} className="hidden" />
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={busy || attaching}
-              title="Upload a handout (photo or PDF)"
+              title="Upload a photo or image"
               className="btn-ghost !px-2.5 shrink-0"
             >
-              {/* paperclip */}
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.41 17.41a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              {/* image icon */}
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => pdfRef.current?.click()}
+              disabled={busy || attaching}
+              title="Upload a PDF"
+              className="btn-ghost !px-2.5 shrink-0"
+            >
+              {/* pdf icon */}
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             </button>
             {isMicSupported() && (
               <button
