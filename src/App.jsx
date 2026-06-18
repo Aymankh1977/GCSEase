@@ -48,7 +48,7 @@ export default function App() {
     setUser(u);
     setReady(true);
     if (u) { setBoardId(u.board || 'aqa'); setTierId(u.tier || 'higher'); }
-    else { setSubjectId(null); setRoute('home'); }
+    else { setSubjectId(null); setPendingSubjectId(null); setRoute('home'); }
   }), []);
 
   useEffect(() => onDataChange(() => setDataNonce((n) => n + 1)), []);

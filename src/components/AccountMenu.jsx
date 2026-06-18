@@ -9,6 +9,7 @@ import { TIERS } from '../data/grades.js';
 export default function AccountMenu({ user, onChanged }) {
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState('');
+  const [loggingOut, setLoggingOut] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
@@ -71,8 +72,17 @@ export default function AccountMenu({ user, onChanged }) {
             <input type="file" accept="application/json,.json" onChange={onImport} className="hidden" />
           </label>
           <div className="my-1 h-px bg-line" />
-          <button onClick={() => { logOut(); }} className="block w-full rounded-lg px-3 py-2 text-left text-sm text-coral hover:bg-paper">
-            Log out
+          <button
+            onClick={async () => {
+              setLoggingOut(true);
+              await logOut();
+              setLoggingOut(false);
+              setOpen(false);
+            }}
+            disabled={loggingOut}
+            className="block w-full rounded-lg px-3 py-2 text-left text-sm text-coral hover:bg-paper disabled:opacity-50"
+          >
+            {loggingOut ? 'Logging out…' : 'Log out'}
           </button>
           {msg && <p className="px-3 py-1 text-xs text-accent">{msg}</p>}
         </div>

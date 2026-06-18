@@ -156,7 +156,7 @@ export async function signUp({ name, email, password, board, tier }) {
     }
     // create the profile row (RLS lets a user write their own)
     await supabase.from('profiles').upsert({ id: data.user.id, name: name.trim(), board: board || null, tier: tier || null });
-    currentUser = await userFromSession(data.session);
+    currentUser = await enrichFromProfile(userFromJwt(data.session));
     emit();
     return currentUser;
   }
@@ -179,7 +179,7 @@ export async function logIn({ email, password }) {
   if (isCloud) {
     const { data, error } = await supabase.auth.signInWithPassword({ email: e, password });
     if (error) throw new Error(error.message.includes('Invalid login') ? 'Incorrect email or password.' : error.message);
-    currentUser = await userFromSession(data.session);
+    currentUser = await enrichFromProfile(userFromJwt(data.session));
     emit();
     return currentUser;
   }
