@@ -197,23 +197,23 @@ export async function logIn({ email, password }) {
 
 export async function logOut() {
   if (isCloud) {
-    try { await supabase.auth.signOut(); } catch { /* ignore */ }
-    // Manually wipe all Supabase session keys so a stale token can't
-    // trigger a re-login via onAuthStateChange after signOut resolves.
+    // Local scope avoids a network round-trip that can fail or be slow.
+    try { await supabase.auth.signOut({ scope: 'local' }); } catch { /* ignore */ }
+    // Wipe every Supabase / sb- key from both localStorage and sessionStorage
+    // so no stale token survives the reload.
     try {
-      for (let i = localStorage.length - 1; i >= 0; i--) {
-        const key = localStorage.key(i);
-        if (key?.startsWith('sb-')) localStorage.removeItem(key);
+      for (const store of [localStorage, sessionStorage]) {
+        for (let i = store.length - 1; i >= 0; i--) {
+          const k = store.key(i);
+          if (k && (k.startsWith('sb-') || k.includes('supabase'))) store.removeItem(k);
+        }
       }
     } catch { /* ignore */ }
   } else {
     try { localStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
   }
   currentUser = null;
-  emit();
-  // Hard reload guarantees a clean React tree regardless of any
-  // in-flight Supabase auth events that might re-set the user.
-  window.location.href = '/';
+  window.location.replace('/');
 }
 
 export async function updateProfile(patch) {
