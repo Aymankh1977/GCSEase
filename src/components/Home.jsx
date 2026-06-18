@@ -12,28 +12,6 @@ export default function Home({ user, boardId, tierId, onBoard, onTier, onPick, o
     <div className="space-y-8">
       <WelcomeBanner name={user?.name} />
 
-      {/* Exam board — one click to switch */}
-      <section>
-        <h2 className="mb-1 font-display text-xl">Exam board</h2>
-        <p className="mb-3 text-sm text-slate2">Tap your board — questions and marking are tailored to its specification.</p>
-        <div className="flex flex-wrap gap-2">
-          {BOARDS.map((b) => {
-            const active = b.id === boardId;
-            return (
-              <button
-                key={b.id}
-                onClick={() => onBoard(b.id)}
-                className={`rounded-xl border px-4 py-2.5 text-left transition ${active ? 'border-transparent text-white shadow-card' : 'border-line bg-surface/70 hover:bg-surface'}`}
-                style={active ? { background: b.color } : undefined}
-              >
-                <span className="block text-sm font-semibold">{b.name}</span>
-                <span className={`block text-xs ${active ? 'text-white/80' : 'text-slate2'}`}>{b.region}</span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
       {/* Tier + grade guide — one click each */}
       <section className="grid gap-3 sm:grid-cols-2">
         <div className="card p-4">

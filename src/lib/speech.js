@@ -48,13 +48,27 @@ if (isSpeechSupported()) {
   // voices load asynchronously in some browsers
   window.speechSynthesis.onvoiceschanged = () => { _cachedVoice = null; };
 }
+function scoreVoice(v) {
+  // Prefer high-quality natural/neural/enhanced voices over robotic TTS
+  let score = 0;
+  const name = v.name.toLowerCase();
+  if (/neural|natural|enhanced|premium|wavenet|studio/i.test(name)) score += 40;
+  if (/google/i.test(name)) score += 20;
+  if (/microsoft/i.test(name) && !/zira|david|mark/i.test(name)) score += 15;
+  // Prefer Samantha / Karen / Daniel (good OS built-in voices)
+  if (/samantha|karen|daniel|rishi|serena|oliver/i.test(name)) score += 25;
+  // British English first, then any English
+  if (/en[-_]GB/i.test(v.lang)) score += 10;
+  else if (/^en/i.test(v.lang)) score += 5;
+  return score;
+}
+
 function pickVoice() {
   if (_cachedVoice) return _cachedVoice;
   const voices = (isSpeechSupported() && window.speechSynthesis.getVoices()) || [];
-  _cachedVoice =
-    voices.find((v) => /en[-_]GB/i.test(v.lang)) ||
-    voices.find((v) => /^en/i.test(v.lang)) ||
-    voices[0] || null;
+  const english = voices.filter((v) => /^en/i.test(v.lang));
+  const pool = english.length ? english : voices;
+  _cachedVoice = pool.sort((a, b) => scoreVoice(b) - scoreVoice(a))[0] || null;
   return _cachedVoice;
 }
 
@@ -66,8 +80,8 @@ export function speak(text, { onend } = {}) {
   const v = pickVoice();
   if (v) u.voice = v;
   u.lang = (v && v.lang) || 'en-GB';
-  u.rate = 1.0;
-  u.pitch = 1.0;
+  u.rate = 0.95;
+  u.pitch = 1.05;
   if (onend) { u.onend = onend; u.onerror = onend; }
   synth.speak(u);
   return true;
@@ -75,6 +89,23 @@ export function speak(text, { onend } = {}) {
 
 export function stopSpeaking() {
   if (isSpeechSupported()) window.speechSynthesis.cancel();
+}
+
+// ---- Speech recognition (mic input) ----
+const SR = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
+export function isMicSupported() { return !!SR; }
+
+export function startListening({ onResult, onEnd, onError } = {}) {
+  if (!SR) return null;
+  const rec = new SR();
+  rec.lang = 'en-GB';
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+  rec.onresult = (e) => { const t = e.results[0]?.[0]?.transcript || ''; if (t) onResult?.(t); };
+  rec.onend = () => onEnd?.();
+  rec.onerror = (e) => onError?.(e.error);
+  rec.start();
+  return rec;
 }
 
 // Tiny pub/sub so only one "Read aloud" button is active at a time.

@@ -3,10 +3,13 @@ import { tutor } from '../lib/api.js';
 import { fileToAttachment } from '../lib/files.js';
 import { getSubjectStats, getSubjectProgress } from '../lib/storage.js';
 import { estimateLevel, levelSummary } from '../lib/level.js';
+import {
+  speak, stopSpeaking, isSpeechSupported,
+  startListening, isMicSupported,
+  subscribe, getCurrent, setCurrent,
+} from '../lib/speech.js';
 import MathText from './MathText.jsx';
-import SpeakButton from './SpeakButton.jsx';
 
-// Pull the plain text out of a message whose content may be a string or blocks.
 function textOfContent(content) {
   if (typeof content === 'string') return content;
   if (Array.isArray(content)) {
@@ -16,16 +19,33 @@ function textOfContent(content) {
   return '';
 }
 
+// Speak an AI reply and update the speaking-ID pub-sub
+function speakReply(text, id, setPlayingId) {
+  if (!isSpeechSupported() || !text) return;
+  setCurrent(id);
+  setPlayingId(id);
+  speak(text, {
+    onend: () => {
+      if (getCurrent() === id) { setCurrent(null); setPlayingId(null); }
+    },
+  });
+}
+
 export default function Tutor({ subject, tierId }) {
   const [topicName, setTopicName] = useState('');
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  const [attachment, setAttachment] = useState(null); // { block, preview }
+  const [attachment, setAttachment] = useState(null);
   const [busy, setBusy] = useState(false);
   const [attaching, setAttaching] = useState(false);
   const [error, setError] = useState('');
+  const [listening, setListening] = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(isSpeechSupported());
+  const [playingId, setPlayingId] = useState(null);
   const endRef = useRef(null);
   const fileRef = useRef(null);
+  const recRef = useRef(null);
+  const nextIdRef = useRef(0);
 
   const starters = [
     `Explain a tricky idea in ${subject.name} simply`,
@@ -37,6 +57,41 @@ export default function Tutor({ subject, tierId }) {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, busy]);
+
+  // Keep playingId in sync with the pub-sub (so external stops work)
+  useEffect(() => subscribe((cur) => { if (!cur) setPlayingId(null); }), []);
+
+  // Clean up mic on unmount
+  useEffect(() => () => { recRef.current?.abort(); stopSpeaking(); }, []);
+
+  function toggleMic() {
+    if (listening) {
+      recRef.current?.abort();
+      recRef.current = null;
+      setListening(false);
+      return;
+    }
+    setListening(true);
+    recRef.current = startListening({
+      onResult: (transcript) => {
+        setInput(transcript);
+        setListening(false);
+        recRef.current = null;
+      },
+      onEnd: () => { setListening(false); recRef.current = null; },
+      onError: () => { setListening(false); recRef.current = null; },
+    });
+  }
+
+  function togglePlay(text, id) {
+    if (playingId === id) {
+      stopSpeaking();
+      setCurrent(null);
+      setPlayingId(null);
+    } else {
+      speakReply(text, id, setPlayingId);
+    }
+  }
 
   async function onPickFile(e) {
     const file = e.target.files?.[0];
@@ -67,9 +122,10 @@ export default function Tutor({ subject, tierId }) {
         content: [attachment.block, { type: 'text', text: question }],
         _preview: attachment.preview,
         _text: question,
+        _id: nextIdRef.current++,
       };
     } else {
-      userMessage = { role: 'user', content: typed, _text: typed };
+      userMessage = { role: 'user', content: typed, _text: typed, _id: nextIdRef.current++ };
     }
 
     const next = [...messages, userMessage];
@@ -94,7 +150,10 @@ export default function Tutor({ subject, tierId }) {
         weakTopics: weakTopics.length ? weakTopics : undefined,
         messages: apiMessages,
       });
-      setMessages([...next, { role: 'assistant', content: reply, _text: reply }]);
+      const replyId = nextIdRef.current++;
+      const replyMsg = { role: 'assistant', content: reply, _text: reply, _id: replyId };
+      setMessages([...next, replyMsg]);
+      if (autoSpeak) speakReply(reply, replyId, setPlayingId);
     } catch (e) {
       setError(e.message);
       setMessages(messages);
@@ -110,20 +169,37 @@ export default function Tutor({ subject, tierId }) {
           <div>
             <h2 className="font-display text-lg">{subject.name} tutor</h2>
             <p className="text-sm text-slate2">
-              Ask anything, or <span className="font-semibold text-ink">upload a handout</span> (photo or PDF) and I&apos;ll explain it.
+              Ask anything — by typing or{' '}
+              <span className="font-semibold text-ink">speaking</span> — or{' '}
+              <span className="font-semibold text-ink">upload a handout</span> and I&apos;ll explain it.
             </p>
           </div>
-          <label className="text-sm">
-            <span className="mr-2 text-slate2">Focus topic</span>
-            <select
-              value={topicName}
-              onChange={(e) => setTopicName(e.target.value)}
-              className="rounded-xl border border-line bg-surface px-3 py-2 font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
-            >
-              <option value="">Any</option>
-              {subject.topics.map((t) => (<option key={t.id} value={t.name}>{t.name}</option>))}
-            </select>
-          </label>
+          <div className="flex flex-wrap items-center gap-3">
+            {isSpeechSupported() && (
+              <label className="flex cursor-pointer items-center gap-2 text-sm select-none">
+                <span className="text-slate2">Auto-read replies</span>
+                <span
+                  role="switch"
+                  aria-checked={autoSpeak}
+                  onClick={() => { setAutoSpeak((v) => !v); stopSpeaking(); setPlayingId(null); }}
+                  className={`relative inline-block h-5 w-9 rounded-full transition-colors ${autoSpeak ? 'bg-accent' : 'bg-line'}`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${autoSpeak ? 'translate-x-4' : ''}`} />
+                </span>
+              </label>
+            )}
+            <label className="text-sm">
+              <span className="mr-2 text-slate2">Focus topic</span>
+              <select
+                value={topicName}
+                onChange={(e) => setTopicName(e.target.value)}
+                className="rounded-xl border border-line bg-surface px-3 py-2 font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
+              >
+                <option value="">Any</option>
+                {subject.topics.map((t) => (<option key={t.id} value={t.name}>{t.name}</option>))}
+              </select>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -131,7 +207,7 @@ export default function Tutor({ subject, tierId }) {
         <div className="flex-1 space-y-3 overflow-y-auto p-4">
           {messages.length === 0 && (
             <div className="space-y-3">
-              <p className="text-sm text-slate2">Try one of these, or tap the paperclip to upload a handout:</p>
+              <p className="text-sm text-slate2">Tap a starter below, type your question, or press the mic 🎙 to speak:</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {starters.map((s) => (
                   <button key={s} onClick={() => send(s)} className="rounded-xl border border-line bg-surface/70 p-3 text-left text-sm hover:bg-surface">
@@ -142,10 +218,17 @@ export default function Tutor({ subject, tierId }) {
             </div>
           )}
 
-          {messages.map((m, i) => (
-            <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 leading-relaxed whitespace-pre-line ${
-                m.role === 'user' ? 'bg-ink text-paper rounded-br-sm' : 'bg-surface border border-line rounded-bl-sm'
+          {messages.map((m) => (
+            <div key={m._id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              {m.role === 'assistant' && (
+                <div className="mr-2 mt-1 shrink-0">
+                  <span className="grid h-7 w-7 place-items-center rounded-full bg-accentSoft text-base">🤖</span>
+                </div>
+              )}
+              <div className={`max-w-[82%] rounded-2xl px-4 py-2.5 leading-relaxed whitespace-pre-line ${
+                m.role === 'user'
+                  ? 'bg-ink text-paper rounded-br-sm'
+                  : 'bg-surface border border-line rounded-bl-sm'
               }`}>
                 {m._preview?.kind === 'image' && (
                   <img src={m._preview.url} alt="uploaded handout" className="mb-2 max-h-48 rounded-lg border border-white/20" />
@@ -156,15 +239,23 @@ export default function Tutor({ subject, tierId }) {
                   </div>
                 )}
                 <MathText>{m._text ?? textOfContent(m.content)}</MathText>
-                {m.role === 'assistant' && (
-                  <div className="mt-2"><SpeakButton text={m._text ?? textOfContent(m.content)} /></div>
+                {m.role === 'assistant' && isSpeechSupported() && (
+                  <button
+                    type="button"
+                    onClick={() => togglePlay(m._text ?? textOfContent(m.content), m._id)}
+                    title={playingId === m._id ? 'Stop' : 'Listen'}
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface/60 px-2 py-1 text-xs font-semibold text-slate2 transition hover:bg-surface hover:text-ink"
+                  >
+                    {playingId === m._id ? '⏹ Stop' : '🔊 Listen'}
+                  </button>
                 )}
               </div>
             </div>
           ))}
 
           {busy && (
-            <div className="flex justify-start">
+            <div className="flex items-end justify-start gap-2">
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-accentSoft text-base shrink-0">🤖</span>
               <div className="rounded-2xl rounded-bl-sm border border-line bg-surface px-4 py-2.5 text-slate2">
                 <span className="inline-flex gap-1">
                   <span className="animate-bounce">·</span>
@@ -200,6 +291,15 @@ export default function Tutor({ subject, tierId }) {
         )}
 
         <div className="border-t border-line p-3">
+          {listening && (
+            <div className="mb-2 flex items-center gap-2 rounded-xl bg-accentSoft px-3 py-2 text-sm font-semibold text-accent">
+              <span className="relative flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-accent" />
+              </span>
+              Listening… speak your question
+            </div>
+          )}
           <div className="flex items-end gap-2">
             <input ref={fileRef} type="file" accept="image/*,application/pdf" onChange={onPickFile} className="hidden" />
             <button
@@ -211,12 +311,27 @@ export default function Tutor({ subject, tierId }) {
             >
               📎
             </button>
+            {isMicSupported() && (
+              <button
+                type="button"
+                onClick={toggleMic}
+                disabled={busy}
+                title={listening ? 'Stop listening' : 'Speak your question'}
+                className={`btn-ghost !px-3 shrink-0 transition ${listening ? 'text-accent ring-2 ring-accent rounded-xl' : ''}`}
+              >
+                🎙
+              </button>
+            )}
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
               rows={1}
-              placeholder={attachment ? 'Ask about your handout… (or just press Send)' : 'Ask a question…  (Enter to send)'}
+              placeholder={
+                listening ? 'Listening…'
+                : attachment ? 'Ask about your handout… (or just press Send)'
+                : 'Ask a question… (Enter to send, or press 🎙)'
+              }
               className="max-h-32 flex-1 resize-none rounded-xl border border-line bg-surface px-3 py-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
             />
             <button className="btn-accent" onClick={() => send()} disabled={busy || attaching || (!input.trim() && !attachment)}>Send</button>

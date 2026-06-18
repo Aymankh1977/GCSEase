@@ -39,6 +39,7 @@ export default function App() {
 
   const [route, setRoute] = useState('home'); // 'home' | 'grades'
   const [subjectId, setSubjectId] = useState(null);
+  const [pendingSubjectId, setPendingSubjectId] = useState(null); // waiting for board pick
   const [view, setView] = useState('dashboard');
   const [practiceTopic, setPracticeTopic] = useState(null);
   const [dataNonce, setDataNonce] = useState(0); // bump to refresh progress after sync
@@ -71,9 +72,15 @@ export default function App() {
   const views = subject?.mode === 'portfolio' ? PORTFOLIO_VIEWS : EXAM_VIEWS;
 
   function openSubject(id) {
-    setSubjectId(id);
-    setView(SUBJECTS_BY_ID[id]?.mode === 'portfolio' ? 'checklist' : 'dashboard');
+    // Show board picker first, then enter subject workspace
+    setPendingSubjectId(id);
+  }
+  function confirmSubject() {
+    if (!pendingSubjectId) return;
+    setSubjectId(pendingSubjectId);
+    setView(SUBJECTS_BY_ID[pendingSubjectId]?.mode === 'portfolio' ? 'checklist' : 'dashboard');
     setPracticeTopic(null);
+    setPendingSubjectId(null);
   }
   function startPractice(topicId) { setPracticeTopic(topicId); setView('practice'); }
   function goHome() { setSubjectId(null); setRoute('home'); }
@@ -123,10 +130,53 @@ export default function App() {
     </header>
   );
 
+  // ---- Board picker modal (shown after subject card clicked, before opening workspace) ----
+  const pendingCatalogue = pendingSubjectId ? SUBJECTS_BY_ID[pendingSubjectId] : null;
+  const boardPickerModal = pendingCatalogue && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+      <div className="card w-full max-w-md p-6 shadow-lift space-y-5 rise">
+        <div className="flex items-center gap-3">
+          <span className="grid h-12 w-12 place-items-center rounded-xl bg-accentSoft text-2xl">{pendingCatalogue.icon}</span>
+          <div>
+            <h2 className="font-display text-xl">{pendingCatalogue.name}</h2>
+            <p className="text-sm text-slate2">Choose your exam board</p>
+          </div>
+        </div>
+        <p className="text-sm text-slate2">Questions and marking are tailored to your board&apos;s specification.</p>
+        <div className="grid gap-2">
+          {BOARDS.map((b) => {
+            const active = b.id === boardId;
+            return (
+              <button
+                key={b.id}
+                onClick={() => { chooseBoard(b.id); }}
+                className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition ${active ? 'border-transparent text-white shadow-card' : 'border-line bg-surface/70 hover:bg-surface'}`}
+                style={active ? { background: b.color } : undefined}
+              >
+                <div className="flex-1">
+                  <span className="block text-sm font-semibold">{b.name}</span>
+                  <span className={`block text-xs ${active ? 'text-white/80' : 'text-slate2'}`}>{b.region} · {b.blurb}</span>
+                </div>
+                {active && <span className="text-white text-base">✓</span>}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex gap-2 pt-1">
+          <button onClick={() => setPendingSubjectId(null)} className="btn-ghost flex-1">Cancel</button>
+          <button onClick={confirmSubject} className="btn-accent flex-1">
+            Start {pendingCatalogue.name} →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   // ---- Home / grade-guide (no subject open) ----
   if (!subject) {
     return (
       <div className="flex min-h-screen flex-col">
+        {boardPickerModal}
         {header}
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
           {route === 'grades' ? (
