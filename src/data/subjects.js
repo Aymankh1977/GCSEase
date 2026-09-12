@@ -445,12 +445,60 @@ const SUBJECTS = [
   },
 ];
 
+// ---- KS3 subjects (Years 7–9, national curriculum — no exam board) ----
+const ks3MathsSubject = {
+  id: 'ks3-maths',
+  name: 'KS3 Mathematics',
+  icon: '🔢',
+  category: 'KS3',
+  tiered: false,
+  noBoard: true,
+  mode: 'exam',
+  markingStyle: 'maths',
+  paper: 'Years 7–9 · National Curriculum · no exam board',
+  groups: {
+    number:     { label: 'Number',                  color: '#2F6DB5' },
+    algebra:    { label: 'Algebra',                 color: '#8A4FB0' },
+    geometry:   { label: 'Geometry & Measures',     color: '#1F8A4C' },
+    ratio:      { label: 'Ratio & Proportion',      color: '#E0A526' },
+    statistics: { label: 'Statistics & Probability', color: '#E8623A' },
+  },
+  topics: [
+    T('ks3-place-value',    'Place value & ordering',       'reading, writing and ordering integers, decimals, negative numbers; rounding to significant figures and decimal places', 'number'),
+    T('ks3-four-ops',       'The four operations',          'written and mental methods for addition, subtraction, multiplication and division including with negatives and decimals', 'number'),
+    T('ks3-fractions',      'Fractions',                    'equivalent fractions, simplifying, comparing, adding, subtracting, multiplying and dividing fractions and mixed numbers', 'number'),
+    T('ks3-decimals-pct',   'Decimals & percentages',       'converting between fractions, decimals and percentages; percentage of an amount and percentage change', 'number'),
+    T('ks3-powers-roots',   'Powers, roots & indices',      'squares, cubes, square roots, cube roots, index notation, and the index laws for multiplication and division', 'number'),
+    T('ks3-primes',         'Primes, factors & multiples',  'prime numbers, prime factor decomposition, highest common factor (HCF) and lowest common multiple (LCM)', 'number'),
+    T('ks3-expressions',    'Expressions & simplifying',    'forming algebraic expressions, collecting like terms, expanding single brackets, factorising simple expressions', 'algebra'),
+    T('ks3-equations',      'Solving linear equations',     'one-step and two-step equations, equations with unknowns on both sides, forming and solving from word problems', 'algebra'),
+    T('ks3-formulae',       'Formulae & substitution',      'substituting values into expressions and formulae, changing the subject of a simple formula', 'algebra'),
+    T('ks3-sequences',      'Sequences',                    'term-to-term rules, nth term of arithmetic sequences, recognising geometric and special sequences', 'algebra'),
+    T('ks3-graphs',         'Coordinates & straight-line graphs', 'four-quadrant coordinates, gradient and y-intercept, plotting and interpreting y = mx + c', 'algebra'),
+    T('ks3-angles',         'Angles & parallel lines',      'angles on a line and around a point, triangles and quadrilaterals, alternate, corresponding and co-interior angles, bearings', 'geometry'),
+    T('ks3-2d-shapes',      'Properties of 2D shapes',      'types of triangles and quadrilaterals, interior and exterior angles of regular and irregular polygons', 'geometry'),
+    T('ks3-area-perimeter', 'Area & perimeter',             'perimeter and area of rectangles, triangles, parallelograms, trapeziums and compound shapes', 'geometry'),
+    T('ks3-circles',        'Circles',                      'parts of a circle, circumference (πd) and area (πr²), perimeter and area of semicircles and sectors', 'geometry'),
+    T('ks3-3d-shapes',      '3D shapes, volume & surface area', 'properties of 3D shapes, volume and surface area of cuboids, prisms and cylinders', 'geometry'),
+    T('ks3-transformations','Transformations',               'reflection, rotation, translation and enlargement — describing and performing each, including negative scale factors', 'geometry'),
+    T('ks3-pythagoras',     "Pythagoras' theorem",          'finding the hypotenuse and a shorter side in right-angled triangles, applying to coordinates and word problems', 'geometry'),
+    T('ks3-ratio',          'Ratio',                        'writing and simplifying ratios, sharing in a ratio, unitary method, ratio problems in context', 'ratio'),
+    T('ks3-proportion',     'Direct & inverse proportion',  'proportional reasoning, recognising direct and inverse proportion, best-value problems', 'ratio'),
+    T('ks3-pct-problems',   'Percentage problems',          'percentage increase and decrease, reverse percentage, simple and compound interest, profit and loss', 'ratio'),
+    T('ks3-data',           'Collecting & displaying data', 'bar charts, pie charts, line graphs, scatter graphs, stem-and-leaf diagrams and two-way tables', 'statistics'),
+    T('ks3-averages',       'Averages & range',             'mean, median, mode and range from lists and frequency tables; choosing the appropriate average', 'statistics'),
+    T('ks3-probability',    'Probability',                  'probability scale, listing outcomes and sample spaces, calculating theoretical probability, experimental probability and relative frequency', 'statistics'),
+  ],
+};
+
+SUBJECTS.push(ks3MathsSubject);
+
 export const SUBJECTS_LIST = SUBJECTS;
 export const SUBJECTS_BY_ID = Object.fromEntries(SUBJECTS.map((s) => [s.id, s]));
 
 // Subject categories in display order.
 export const CATEGORY_ORDER = [
-  'Core', 'Sciences', 'Languages', 'Humanities', 'Social sciences', 'STEM', 'Creative', 'Other',
+  'KS3', 'Core', 'Sciences', 'Languages', 'Humanities', 'Social sciences', 'STEM', 'Creative', 'Other',
 ];
 
 export function topicsByGroup(subject) {

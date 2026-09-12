@@ -62,8 +62,8 @@ export default function App() {
     if (!catalogue) return null;
     return {
       ...catalogue,
-      boardId,
-      board: boardName(boardId),
+      boardId: catalogue.noBoard ? null : boardId,
+      board: catalogue.noBoard ? 'National Curriculum' : boardName(boardId),
       tierId: catalogue.tiered ? tierId : null,
       tier: catalogue.tiered ? TIERS[tierId]?.short : null,
     };
@@ -72,8 +72,16 @@ export default function App() {
   const views = subject?.mode === 'portfolio' ? PORTFOLIO_VIEWS : EXAM_VIEWS;
 
   function openSubject(id) {
-    // Show board picker first, then enter subject workspace
-    setPendingSubjectId(id);
+    const cat = SUBJECTS_BY_ID[id];
+    if (cat?.noBoard) {
+      // KS3 / national-curriculum subjects have no exam board — skip picker
+      setSubjectId(id);
+      setView(cat.mode === 'portfolio' ? 'checklist' : 'dashboard');
+      setPracticeTopic(null);
+      setPendingSubjectId(null);
+    } else {
+      setPendingSubjectId(id);
+    }
   }
   function confirmSubject() {
     if (!pendingSubjectId) return;
