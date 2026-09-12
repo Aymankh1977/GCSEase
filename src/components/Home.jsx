@@ -2,6 +2,7 @@ import { SUBJECTS_LIST, CATEGORY_ORDER } from '../data/subjects.js';
 import { BOARDS, BOARDS_BY_ID } from '../data/boards.js';
 import { TIER_LIST, TIERS } from '../data/grades.js';
 import WelcomeBanner from './WelcomeBanner.jsx';
+import HowItWorks from './HowItWorks.jsx';
 
 export default function Home({ user, boardId, tierId, onBoard, onTier, onPick, onGrades }) {
   const byCategory = CATEGORY_ORDER
@@ -11,6 +12,7 @@ export default function Home({ user, boardId, tierId, onBoard, onTier, onPick, o
   return (
     <div className="space-y-8">
       <WelcomeBanner name={user?.name} />
+      <HowItWorks />
 
       {/* Tier + grade guide — one click each */}
       <section className="grid gap-3 sm:grid-cols-2">
