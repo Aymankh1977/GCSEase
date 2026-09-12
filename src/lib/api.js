@@ -1,12 +1,24 @@
 // Client wrappers around the Netlify Functions. The functions hold the
 // Anthropic API key server-side — the browser never sees it.
 
+import { supabase, isCloud } from './supabase.js';
+
 const BASE = '/.netlify/functions';
 
+async function getAuthHeader() {
+  if (!isCloud || !supabase) return {};
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) return { Authorization: `Bearer ${session.access_token}` };
+  } catch { /* offline or local mode */ }
+  return {};
+}
+
 async function postJSON(path, body) {
+  const auth = await getAuthHeader();
   const res = await fetch(`${BASE}/${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...auth },
     body: JSON.stringify(body),
   });
   const text = await res.text();
@@ -17,7 +29,11 @@ async function postJSON(path, body) {
     throw new Error(`Unexpected response from ${path}: ${text.slice(0, 200)}`);
   }
   if (!res.ok) {
-    throw new Error(data.error || `Request to ${path} failed (${res.status})`);
+    const err = new Error(data.error || `Request to ${path} failed (${res.status})`);
+    err.statusCode = res.status;
+    err.code = data.error; // e.g. 'LIMIT_REACHED'
+    err.detail = data;
+    throw err;
   }
   return data;
 }
@@ -26,7 +42,6 @@ export function generateQuestion({ subject, board, tier, gradeBand, studentLevel
   return postJSON('generate-question', { subject, board, tier, gradeBand, studentLevel, markingStyle, topicName, focus, difficulty, exclude });
 }
 
-// Accepts { subject, board, markingStyle, topicName, context, parts:[{label,prompt,marks,answer}] }.
 export function markAnswer(payload) {
   return postJSON('mark-answer', payload);
 }

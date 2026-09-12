@@ -1,4 +1,4 @@
-import { getClient, MODEL, json, parseBody, textOf, wrap } from './_lib.js';
+import { getClient, modelForPlan, verifyUser, checkAndConsume, json, parseBody, textOf, wrap } from './_lib.js';
 
 const MAX_TURNS = 16; // smaller, since messages may carry images/PDFs
 
@@ -18,6 +18,21 @@ function sanitizeContent(content) {
 }
 
 export const handler = wrap(async (event) => {
+  // Auth + usage check
+  const auth = await verifyUser(event.headers.authorization || event.headers.Authorization);
+  const plan = auth?.plan || 'free';
+  if (auth?.userId) {
+    const usage = await checkAndConsume(auth.userId, plan, 'tutor_msgs');
+    if (!usage.allowed) {
+      return json(429, {
+        error: 'LIMIT_REACHED',
+        message: `Daily limit reached (${usage.limit} tutor messages). Upgrade to Pro for 30/day.`,
+        limit: usage.limit,
+      });
+    }
+  }
+  const model = modelForPlan(plan);
+
   const { subject, board, tier, topicName, studentLevel, weakTopics, messages } = parseBody(event);
   if (!Array.isArray(messages) || messages.length === 0) {
     return json(400, { error: 'messages array is required.' });
@@ -45,7 +60,7 @@ ${topicName ? `\nThe student is currently focusing on: ${topicName}.` : ''}`;
 
   const client = getClient();
   const msg = await client.messages.create({
-    model: MODEL,
+    model,
     max_tokens: 1100,
     temperature: 0.6,
     system,

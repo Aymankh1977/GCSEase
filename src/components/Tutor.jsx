@@ -9,6 +9,7 @@ import {
   subscribe, getCurrent, setCurrent,
 } from '../lib/speech.js';
 import MathText from './MathText.jsx';
+import UpgradePrompt from './UpgradePrompt.jsx';
 
 function textOfContent(content) {
   if (typeof content === 'string') return content;
@@ -39,6 +40,7 @@ export default function Tutor({ subject, tierId }) {
   const [busy, setBusy] = useState(false);
   const [attaching, setAttaching] = useState(false);
   const [error, setError] = useState('');
+  const [limitReached, setLimitReached] = useState(false);
   const [listening, setListening] = useState(false);
   const [autoSpeak, setAutoSpeak] = useState(isSpeechSupported());
   const [playingId, setPlayingId] = useState(null);
@@ -156,7 +158,8 @@ export default function Tutor({ subject, tierId }) {
       setMessages([...next, replyMsg]);
       if (autoSpeak) speakReply(reply, replyId, setPlayingId);
     } catch (e) {
-      setError(e.message);
+      if (e.code === 'LIMIT_REACHED') setLimitReached(true);
+      else setError(e.message);
       setMessages(messages);
     } finally {
       setBusy(false);
@@ -270,7 +273,8 @@ export default function Tutor({ subject, tierId }) {
           <div ref={endRef} />
         </div>
 
-        {error && <p className="px-4 pb-2 text-sm text-coral">{error}</p>}
+        {limitReached && <div className="p-4"><UpgradePrompt type="tutor_msgs" /></div>}
+        {error && !limitReached && <p className="px-4 pb-2 text-sm text-coral">{error}</p>}
 
         {(attachment || attaching) && (
           <div className="border-t border-line px-3 pt-2">

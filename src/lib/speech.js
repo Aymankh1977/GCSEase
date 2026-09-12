@@ -122,19 +122,13 @@ function stopBrowser() {
 }
 
 // ---- Unified speak / stop ----
-// Tries OpenAI TTS first; if the server returns an error (no key configured),
-// falls back silently to browser speech.
+// Uses the browser Web Speech API — free, zero cost, no API key needed.
 
-export async function speak(text, { onend } = {}) {
-  try {
-    await speakViaAPI(text, { onend });
-  } catch {
-    speakBrowser(text, { onend });
-  }
+export function speak(text, { onend } = {}) {
+  speakBrowser(text, { onend });
 }
 
 export function stopSpeaking() {
-  stopAPI();
   stopBrowser();
 }
 

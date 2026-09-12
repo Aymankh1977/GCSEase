@@ -1,4 +1,4 @@
-import { getClient, MODEL, json, parseBody, textOf, extractJSON, wrap } from './_lib.js';
+import { getClient, modelForPlan, verifyUser, checkAndConsume, json, parseBody, textOf, extractJSON, wrap } from './_lib.js';
 
 const DIFFICULTY = {
   1: 'foundational: short, one or two steps',
@@ -57,6 +57,21 @@ function buildParts(data) {
 }
 
 export const handler = wrap(async (event) => {
+  // Auth + usage check
+  const auth = await verifyUser(event.headers.authorization || event.headers.Authorization);
+  const plan = auth?.plan || 'free';
+  if (auth?.userId) {
+    const usage = await checkAndConsume(auth.userId, plan, 'questions');
+    if (!usage.allowed) {
+      return json(429, {
+        error: 'LIMIT_REACHED',
+        message: `Daily limit reached (${usage.limit} questions). Upgrade to Pro for 30/day.`,
+        limit: usage.limit,
+      });
+    }
+  }
+  const model = modelForPlan(plan);
+
   const { subject, board, tier, gradeBand, studentLevel, markingStyle = 'essay', topicName, focus, difficulty = 2, exclude = [] } = parseBody(event);
   if (!subject || !topicName) return json(400, { error: 'subject and topicName are required.' });
 
@@ -93,7 +108,7 @@ Use a single part with "label": "" when the question is not multi-part. Use LaTe
       ? system
       : `${system}\n\nYour previous attempt referred to a diagram/figure/graph/chart that cannot be displayed. Rewrite the question so it is 100% answerable from the text: remove every reference to a visual, and instead write any required data out as numbers/words in "context".`;
     const msg = await client.messages.create({
-      model: MODEL, max_tokens: 1100, temperature: 0.9, system: sys,
+      model, max_tokens: 1100, temperature: 0.9, system: sys,
       messages: [{ role: 'user', content: user }],
     });
     const data = extractJSON(textOf(msg));

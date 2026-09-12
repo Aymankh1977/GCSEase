@@ -76,6 +76,7 @@ function userFromJwt(session) {
     name: session.user.user_metadata?.name || '',
     board: session.user.user_metadata?.board ?? null,
     tier: session.user.user_metadata?.tier ?? null,
+    plan: 'free', // enriched below by enrichFromProfile
   };
 }
 
@@ -86,10 +87,10 @@ async function enrichFromProfile(user) {
   try {
     const { data } = await supabase
       .from('profiles')
-      .select('name, board, tier')
+      .select('name, board, tier, plan')
       .eq('id', user.id)
       .maybeSingle();
-    if (data) return { ...user, name: data.name || user.name, board: data.board ?? user.board, tier: data.tier ?? user.tier };
+    if (data) return { ...user, name: data.name || user.name, board: data.board ?? user.board, tier: data.tier ?? user.tier, plan: data.plan || 'free' };
   } catch { /* offline — use JWT data */ }
   return user;
 }

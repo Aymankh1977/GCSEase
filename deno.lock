@@ -12,6 +12,7 @@
     "packageJson": {
       "dependencies": [
         "npm:@anthropic-ai/sdk@~0.30.1",
+        "npm:@supabase/supabase-js@^2.108.2",
         "npm:@vitejs/plugin-react@^4.3.4",
         "npm:autoprefixer@^10.4.20",
         "npm:katex@~0.16.11",

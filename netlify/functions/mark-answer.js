@@ -1,4 +1,4 @@
-import { getClient, MODEL, json, parseBody, textOf, extractJSON, wrap } from './_lib.js';
+import { getClient, modelForPlan, verifyUser, MODEL, json, parseBody, textOf, extractJSON, wrap } from './_lib.js';
 
 function markGuidance(markingStyle) {
   switch (markingStyle) {
@@ -18,6 +18,11 @@ function markGuidance(markingStyle) {
 }
 
 export const handler = wrap(async (event) => {
+  // Auth check — marking is free (always paired with a question that was already counted)
+  const auth = await verifyUser(event.headers.authorization || event.headers.Authorization);
+  const plan = auth?.plan || 'free';
+  const model = modelForPlan(plan);
+
   const body = parseBody(event);
   const { subject, board, markingStyle = 'essay', topicName, context = '' } = body;
 
@@ -63,7 +68,7 @@ Overall score: 1 = full or nearly full marks across the whole question, 0.5 = pa
 
   const client = getClient();
   const msg = await client.messages.create({
-    model: MODEL,
+    model,
     max_tokens: 1600,
     temperature: 0.2,
     system,

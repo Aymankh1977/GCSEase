@@ -6,6 +6,7 @@ import { recordAttempt, getProgress, getSubjectStats } from '../lib/storage.js';
 import { estimateLevel, levelSummary } from '../lib/level.js';
 import MathText from './MathText.jsx';
 import SpeakButton from './SpeakButton.jsx';
+import UpgradePrompt from './UpgradePrompt.jsx';
 
 const DIFFS = [
   { v: 1, label: 'Build-up' },
@@ -36,6 +37,7 @@ export default function Practice({ subject, tierId, initialTopicId, onTopicConsu
   const [seen, setSeen] = useState([]);
   const [phase, setPhase] = useState('idle');
   const [error, setError] = useState('');
+  const [limitReached, setLimitReached] = useState(false);
 
   const topic = topicsById[topicId];
 
@@ -50,7 +52,7 @@ export default function Practice({ subject, tierId, initialTopicId, onTopicConsu
 
   async function loadQuestion(tid = topicId, diff = difficulty) {
     const t = topicsById[tid];
-    setError(''); setResult(null); setAnswers([]); setQ(null); setPhase('loadingQ');
+    setError(''); setResult(null); setAnswers([]); setQ(null); setPhase('loadingQ'); setLimitReached(false);
     try {
       const level = estimateLevel(getSubjectStats(subject.id), subject.topics.length, subject.tiered ? tierId : 'all');
       const data = await generateQuestion({
@@ -70,7 +72,8 @@ export default function Practice({ subject, tierId, initialTopicId, onTopicConsu
       setSeen((s) => [...s, marker].slice(-6));
       setPhase('answering');
     } catch (e) {
-      setError(e.message); setPhase('idle');
+      if (e.code === 'LIMIT_REACHED') { setLimitReached(true); setPhase('idle'); }
+      else { setError(e.message); setPhase('idle'); }
     }
   }
 
@@ -153,7 +156,8 @@ export default function Practice({ subject, tierId, initialTopicId, onTopicConsu
         </div>
       </div>
 
-      {error && <div className="card border-coral/40 p-4 text-sm text-coral">{error}</div>}
+      {limitReached && <UpgradePrompt type="questions" />}
+      {error && !limitReached && <div className="card border-coral/40 p-4 text-sm text-coral">{error}</div>}
 
       {q && (
         <div className="card rise p-5">
