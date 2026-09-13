@@ -182,7 +182,7 @@ export function masteryBand(mastery) {
 export function exportData() {
   const u = getCurrentUser();
   return {
-    app: 'GCSEase',
+    app: 'GCSEasy',
     version: 1,
     exportedAt: new Date().toISOString(),
     account: u ? { name: u.name, email: u.email, board: u.board, tier: u.tier } : null,
@@ -192,7 +192,7 @@ export function exportData() {
 
 export function importData(payload) {
   if (!payload || typeof payload !== 'object' || !payload.data) {
-    throw new Error('That file does not look like a GCSEase backup.');
+    throw new Error('That file does not look like a GCSEasy backup.');
   }
   cache = merge(cache, payload.data);
   persist();

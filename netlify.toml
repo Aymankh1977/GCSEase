@@ -4,11 +4,32 @@
   publish = "dist"
   functions = "netlify/functions"
 
+[functions]
+  node_bundler = "esbuild"
+
+[functions."tutor"]
+  timeout = 26
+
+[functions."generate-question"]
+  timeout = 26
+
+[functions."mark-answer"]
+  timeout = 26
+
+[functions."ls-webhook"]
+  timeout = 26
+
 [dev]
   command = "npm run dev"
   targetPort = 5173
   port = 8888
   framework = "#custom"
+
+# Serve sitemap and robots without SPA rewrite
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "/sitemap.xml"
+  status = 200
 
 # SPA fallback so client-side views resolve on refresh
 [[redirects]]

@@ -31,7 +31,9 @@ export const handler = wrap(async (event) => {
       });
     }
   }
-  const model = modelForPlan(plan);
+  // Haiku is fast enough for conversational tutoring and stays well within
+  // Netlify's function timeout. Sonnet is reserved for question generation.
+  const model = 'claude-haiku-4-5-20251001';
 
   const { subject, board, tier, topicName, studentLevel, weakTopics, messages } = parseBody(event);
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -61,7 +63,7 @@ ${topicName ? `\nThe student is currently focusing on: ${topicName}.` : ''}`;
   const client = getClient();
   const msg = await client.messages.create({
     model,
-    max_tokens: 1100,
+    max_tokens: 800,
     temperature: 0.6,
     system,
     messages: trimmed,

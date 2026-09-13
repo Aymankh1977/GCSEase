@@ -47,7 +47,7 @@ export default function AuthScreen({ onAuthed }) {
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex items-center gap-3">
             <GCSEaseLogo size={40} />
-            <span className="font-display text-xl font-semibold">GCSEase</span>
+            <span className="font-display text-xl font-semibold">GCSEasy</span>
           </div>
           <ThemeToggle />
         </div>
@@ -59,7 +59,7 @@ export default function AuthScreen({ onAuthed }) {
           <div className="mb-4 flex items-center gap-3">
             <GCSEaseLogo size={64} />
             <div>
-              <h1 className="font-display text-3xl font-semibold">GCSEase</h1>
+              <h1 className="font-display text-3xl font-semibold">GCSEasy</h1>
               <p className="text-slate2">GCSE revision, made easy.</p>
             </div>
           </div>

@@ -1,33 +1,35 @@
-// Shown when a free user hits their daily question or tutor limit.
-// Replace CHECKOUT_URL with your Lemon Squeezy checkout link.
-const CHECKOUT_URL = 'https://gcsease.lemonsqueezy.com/buy/pro'; // ← replace this
+const CHECKOUT_URL = 'https://gcseasey.lemonsqueezy.com/checkout/buy/a4bddc75-a0f9-454e-a812-8f2ca2d5eac9';
 
 export default function UpgradePrompt({ type = 'questions' }) {
-  const what = type === 'tutor_msgs' ? 'tutor messages' : 'AI questions';
+  const what = type === 'tutor_msgs' ? 'AI tutor messages' : 'AI questions';
   return (
     <div className="card rise border-accent/30 p-6 text-center space-y-4">
-      <div className="text-4xl">🎯</div>
+      <div className="text-4xl">🚀</div>
       <div>
-        <p className="font-display text-xl font-semibold">Daily limit reached</p>
+        <p className="font-display text-xl font-semibold">You've reached today's free limit</p>
         <p className="mt-1 text-sm text-slate2">
-          You've used your 3 free {what} for today. Come back tomorrow, or upgrade
-          to <strong>Pro</strong> for 30/day.
+          Your 3 free {what} for today have been used. Your allowance resets at midnight —
+          or upgrade to <strong>Pro</strong> for unlimited daily practice.
         </p>
       </div>
 
-      <div className="rounded-2xl border border-line bg-surface/60 p-4 text-left space-y-2">
-        <p className="text-sm font-semibold">GCSEase Pro</p>
-        <ul className="space-y-1 text-xs text-slate2">
-          <li>✓ 30 AI questions per day</li>
-          <li>✓ 30 AI tutor messages per day</li>
-          <li>✓ Higher-quality AI (Claude Sonnet)</li>
-          <li>✓ All subjects &amp; KS3 Maths</li>
-          <li>✓ Progress saved to your account</li>
+      <div className="rounded-2xl border border-accent/20 bg-accentSoft/30 p-4 text-left space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-bold text-white tracking-wide">PRO</span>
+          <p className="text-sm font-semibold">GCSEasy Pro — everything you need to succeed</p>
+        </div>
+        <ul className="space-y-1.5 text-xs text-slate2">
+          <li>✓ <strong>30 AI exam questions</strong> per day — every subject &amp; topic</li>
+          <li>✓ <strong>30 AI tutor messages</strong> per day — ask anything, get clear explanations</li>
+          <li>✓ <strong>Instant examiner-style marking</strong> with detailed feedback</li>
+          <li>✓ <strong>Full progress tracking</strong> — see exactly where to improve</li>
+          <li>✓ <strong>All subjects</strong> including KS3 Maths, available 24/7</li>
+          <li>✓ <strong>Cancel anytime</strong> — no hidden fees</li>
         </ul>
-        <div className="pt-2 flex items-baseline gap-2">
+        <div className="pt-1 flex items-baseline gap-2 border-t border-line">
           <span className="font-display text-2xl font-bold">£3.99</span>
           <span className="text-xs text-slate2">/month</span>
-          <span className="ml-auto text-xs text-slate2">or £24.99/year</span>
+          <span className="ml-auto text-sm font-semibold text-accent">or £29.99/year — save 37%</span>
         </div>
       </div>
 
@@ -37,9 +39,12 @@ export default function UpgradePrompt({ type = 'questions' }) {
         rel="noopener noreferrer"
         className="btn-accent block w-full py-3 text-center text-sm font-semibold"
       >
-        Upgrade to Pro →
+        Upgrade to Pro — start today →
       </a>
-      <p className="text-xs text-slate2">Resets daily at midnight. Free tier resets automatically.</p>
+      <p className="text-xs text-slate2">
+        Free plan: 3 AI questions + 3 tutor messages per day, resets at midnight.
+        Secure payment via Lemon Squeezy. Cancel anytime.
+      </p>
     </div>
   );
 }

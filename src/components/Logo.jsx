@@ -5,7 +5,7 @@
 // an embossed (shadow + highlight) "G", with a small spark accent (the "ease").
 // Font-independent vector paths so it also works as an app icon.
 
-export function GCSEaseLogo({ size = 44, className = '', title = 'GCSEase' }) {
+export function GCSEaseLogo({ size = 44, className = '', title = 'GCSEasy' }) {
   const id = 'gl' + Math.random().toString(36).slice(2, 8);
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" role="img" aria-label={title} className={className}>

@@ -53,7 +53,7 @@ export default function HowItWorks() {
         onClick={toggle}
         className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
       >
-        <span className="font-display text-base font-semibold">How to use GCSEase</span>
+        <span className="font-display text-base font-semibold">How to use GCSEasy</span>
         <span
           className="text-slate2 transition-transform duration-200"
           style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
@@ -65,9 +65,10 @@ export default function HowItWorks() {
       {open && (
         <div className="border-t border-line px-5 pb-5 pt-4">
           <p className="mb-4 text-sm text-slate2">
-            GCSEase is an AI revision tutor for GCSE and KS3 students. It creates exam-style
-            questions, marks your answers like a real examiner, and tracks your progress topic
-            by topic — available 24/7, completely free.
+            GCSEasy is an AI revision platform for GCSE and KS3 students. It generates
+            real exam-style questions, marks your answers like an examiner, and tracks your
+            progress topic by topic — available 24/7. Free accounts get 3 AI questions and
+            3 tutor messages per day; upgrade to Pro for 30/day.
           </p>
           <ol className="space-y-3">
             {STEPS.map((s, i) => (

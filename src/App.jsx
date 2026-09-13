@@ -16,6 +16,8 @@ import Checklist from './components/Checklist.jsx';
 import ThemeToggle from './components/ThemeToggle.jsx';
 import AccountMenu from './components/AccountMenu.jsx';
 import Footer from './components/Footer.jsx';
+import Privacy from './components/Privacy.jsx';
+import Terms from './components/Terms.jsx';
 import { GCSEaseLogo } from './components/Logo.jsx';
 
 const EXAM_VIEWS = [
@@ -37,7 +39,7 @@ export default function App() {
   const [boardId, setBoardId] = useState(() => getCurrentUser()?.board || 'aqa');
   const [tierId, setTierId] = useState(() => getCurrentUser()?.tier || 'higher');
 
-  const [route, setRoute] = useState('home'); // 'home' | 'grades'
+  const [route, setRoute] = useState('home'); // 'home' | 'grades' | 'privacy' | 'terms'
   const [subjectId, setSubjectId] = useState(null);
   const [pendingSubjectId, setPendingSubjectId] = useState(null); // waiting for board pick
   const [view, setView] = useState('dashboard');
@@ -98,7 +100,7 @@ export default function App() {
       <div className="grid min-h-screen place-items-center">
         <div className="flex items-center gap-3 text-slate2">
           <GCSEaseLogo size={40} />
-          <span className="font-display text-lg">Loading GCSEase…</span>
+          <span className="font-display text-lg">Loading GCSEasy…</span>
         </div>
       </div>
     );
@@ -111,7 +113,7 @@ export default function App() {
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2.5">
         <button onClick={goHome} className="flex items-center gap-2.5 text-left">
           <GCSEaseLogo size={36} />
-          <span className="font-display text-lg font-semibold">GCSEase</span>
+          <span className="font-display text-lg font-semibold">GCSEasy</span>
         </button>
         <div className="flex items-center gap-2">
           <div className="hidden items-center gap-0.5 rounded-lg border border-line bg-surface/60 p-0.5 sm:flex">
@@ -171,6 +173,26 @@ export default function App() {
     </div>
   );
 
+  // ---- Legal pages (privacy / terms) ----
+  if (route === 'privacy') {
+    return (
+      <div className="flex min-h-screen flex-col">
+        {header}
+        <main className="mx-auto w-full max-w-5xl flex-1"><Privacy onBack={() => setRoute('home')} /></main>
+        <Footer onNav={setRoute} />
+      </div>
+    );
+  }
+  if (route === 'terms') {
+    return (
+      <div className="flex min-h-screen flex-col">
+        {header}
+        <main className="mx-auto w-full max-w-5xl flex-1"><Terms onBack={() => setRoute('home')} /></main>
+        <Footer onNav={setRoute} />
+      </div>
+    );
+  }
+
   // ---- Home / grade-guide (no subject open) ----
   if (!subject) {
     return (
@@ -195,7 +217,7 @@ export default function App() {
             />
           )}
         </main>
-        <Footer />
+        <Footer onNav={setRoute} />
       </div>
     );
   }
@@ -238,7 +260,7 @@ export default function App() {
         {view === 'grades' && <GradeGuide tierId={subject.tiered ? tierId : 'higher'} subjectName={subject.name} />}
       </main>
 
-      <Footer>
+      <Footer onNav={setRoute}>
         <span>{subject.name} · {subject.board}{subject.tier ? ` · ${subject.tier} tier` : ''} · {subject.paper}</span>
       </Footer>
     </div>
