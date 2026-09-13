@@ -24,6 +24,16 @@
 
     <title>GCSEasy — GCSE revision made easy</title>
 
+    <!-- Redirect any non-canonical domain to gcseasy.org -->
+    <script>
+      (function () {
+        var h = window.location.hostname;
+        if (h !== 'gcseasy.org' && h !== 'www.gcseasy.org' && h !== 'localhost') {
+          window.location.replace('https://gcseasy.org' + window.location.pathname + window.location.search + window.location.hash);
+        }
+      })();
+    </script>
+
     <!-- Apply saved theme before paint to avoid a flash -->
     <script>
       try {
