@@ -31,9 +31,7 @@ export const handler = wrap(async (event) => {
       });
     }
   }
-  // Haiku is fast enough for conversational tutoring and stays well within
-  // Netlify's function timeout. Sonnet is reserved for question generation.
-  const model = 'claude-haiku-4-5-20251001';
+  const model = modelForPlan(plan);
 
   const { subject, board, tier, topicName, studentLevel, weakTopics, messages } = parseBody(event);
   if (!Array.isArray(messages) || messages.length === 0) {

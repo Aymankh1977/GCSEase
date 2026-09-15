@@ -23,11 +23,9 @@ export function modelForPlan(plan) {
 
 | Feature | Function | Free users | Pro / Family users |
 |---|---|---|---|
-| Question generation | `generate-question.js` | Haiku | Sonnet (via `modelForPlan`) |
-| Answer marking | `mark-answer.js` | Haiku | Sonnet (via `modelForPlan`) |
-| AI Tutor | `tutor.js` | Haiku (hardcoded line 36) | Haiku (hardcoded line 36) |
-
-> **Note:** The tutor uses Haiku for **all** plans — it is hardcoded in `tutor.js:36` rather than using `modelForPlan`. This was a deliberate choice for speed and cost (tutor responses need to be fast). If you want Pro users to get Sonnet in the tutor, change line 36 of `tutor.js` to use `modelForPlan(plan)` instead.
+| Question generation | `generate-question.js` | Haiku | Sonnet 5 (via `modelForPlan`) |
+| Answer marking | `mark-answer.js` | Haiku | Sonnet 5 (via `modelForPlan`) |
+| AI Tutor | `tutor.js` | Haiku | Sonnet 5 (via `modelForPlan`) |
 
 ---
 
@@ -66,9 +64,8 @@ This overrides the hardcoded Sonnet value without a code change or redeploy.
 
 | Model | ID | Used for |
 |---|---|---|
-| Claude Haiku 4.5 | `claude-haiku-4-5-20251001` | All question gen + marking; tutor (all plans) |
-
-> **To restore Sonnet for Pro users**, change line 8 of `_lib.js` back to `'claude-sonnet-4-6'`.
+| Claude Sonnet 5 | `claude-sonnet-5` | Pro/family question gen, marking + tutor |
+| Claude Haiku 4.5 | `claude-haiku-4-5-20251001` | Free question gen, marking + tutor |
 
 ---
 
