@@ -20,7 +20,7 @@ export default function Terms({ onBack }) {
         <section className="space-y-2">
           <h2 className="font-semibold">2. Free and Pro plans</h2>
           <ul className="text-sm text-slate2 leading-relaxed space-y-1 list-disc list-inside">
-            <li><strong>Free:</strong> 3 AI questions and 3 AI tutor messages per day, resets at midnight (GMT)</li>
+            <li><strong>Free:</strong> 5 AI questions and 5 AI tutor messages per day, resets at midnight (GMT)</li>
             <li><strong>Pro (£3.99/month or £29.99/year):</strong> 30 AI questions and 30 tutor messages per day</li>
             <li>Daily limits exist to manage AI costs and ensure fair access for all users</li>
             <li>Limits may be adjusted with reasonable notice</li>

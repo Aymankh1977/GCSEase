@@ -67,8 +67,8 @@ export default function HowItWorks() {
           <p className="mb-4 text-sm text-slate2">
             GCSEasy is an AI revision platform for GCSE and KS3 students. It generates
             real exam-style questions, marks your answers like an examiner, and tracks your
-            progress topic by topic — available 24/7. Free accounts get 3 AI questions and
-            3 tutor messages per day; upgrade to Pro for 30/day.
+            progress topic by topic — available 24/7. Free accounts get 5 AI questions and
+            5 tutor messages per day; upgrade to Pro for 30/day.
           </p>
           <ol className="space-y-3">
             {STEPS.map((s, i) => (

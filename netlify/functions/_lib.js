@@ -16,7 +16,7 @@ export function modelForPlan(plan) {
 
 // ── Daily limits ──────────────────────────────────────────────────────────────
 const LIMITS = {
-  free:   { questions: 3,  tutor_msgs: 3  },
+  free:   { questions: 5,  tutor_msgs: 5  },
   pro:    { questions: 30, tutor_msgs: 30 },
   family: { questions: 30, tutor_msgs: 30 },
 };

@@ -8,7 +8,7 @@ export default function UpgradePrompt({ type = 'questions' }) {
       <div>
         <p className="font-display text-xl font-semibold">You've reached today's free limit</p>
         <p className="mt-1 text-sm text-slate2">
-          Your 3 free {what} for today have been used. Your allowance resets at midnight —
+          Your 5 free {what} for today have been used. Your allowance resets at midnight —
           or upgrade to <strong>Pro</strong> for unlimited daily practice.
         </p>
       </div>
@@ -42,7 +42,7 @@ export default function UpgradePrompt({ type = 'questions' }) {
         Upgrade to Pro — start today →
       </a>
       <p className="text-xs text-slate2">
-        Free plan: 3 AI questions + 3 tutor messages per day, resets at midnight.
+        Free plan: 5 AI questions + 5 tutor messages per day, resets at midnight.
         Secure payment via Lemon Squeezy. Cancel anytime.
       </p>
     </div>
