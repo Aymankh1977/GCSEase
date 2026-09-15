@@ -66,8 +66,9 @@ This overrides the hardcoded Sonnet value without a code change or redeploy.
 
 | Model | ID | Used for |
 |---|---|---|
-| Claude Sonnet 4.6 | `claude-sonnet-4-6` | Pro/family question gen + marking |
-| Claude Haiku 4.5 | `claude-haiku-4-5-20251001` | Free question gen + marking; tutor (all plans) |
+| Claude Haiku 4.5 | `claude-haiku-4-5-20251001` | All question gen + marking; tutor (all plans) |
+
+> **To restore Sonnet for Pro users**, change line 8 of `_lib.js` back to `'claude-sonnet-4-6'`.
 
 ---
 

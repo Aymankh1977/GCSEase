@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 // ── Models ────────────────────────────────────────────────────────────────────
 // Pro / family users get Sonnet (best quality).
 // Free users get Haiku (4× cheaper, still very capable).
-const SONNET = process.env.CLAUDE_MODEL || 'claude-sonnet-4-6';
+const SONNET = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
 const HAIKU  = 'claude-haiku-4-5-20251001';
 
 export const MODEL = SONNET; // kept for backward compat
